@@ -1,0 +1,6 @@
+settings:
+  trajectory: trajectory
+  signs:
+    note: '{GOLD}Полёт по демо!'
+internal:
+  version: 1

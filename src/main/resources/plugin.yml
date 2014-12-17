@@ -1,0 +1,15 @@
+name: ${project.artifactId}
+main: ${project.groupId}.${project.artifactId}.BukkitPluginMain
+version: ${project.version}
+author: SimSonic
+website: http://www.voxile.ru
+soft-depend:
+- ProtocolLib
+commands:
+  rscfjd:
+    description: ${project.artifactId} command hub
+    usage: /<command> do what?
+permissions:
+  rscfjd.admin:
+    description: Access to all functions
+    default: op
