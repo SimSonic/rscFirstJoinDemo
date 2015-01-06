@@ -1,13 +1,10 @@
 package ru.simsonic.rscFirstJoinDemo;
 import java.util.logging.Level;
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.WeatherType;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import ru.simsonic.rscFirstJoinDemo.Trajectory.TrajectoryPlayState;
-import ru.simsonic.rscFirstJoinDemo.Trajectory.TrajectoryPoint;
 import ru.simsonic.utilities.LanguageUtility;
 
 public class TrajectoryPlayer

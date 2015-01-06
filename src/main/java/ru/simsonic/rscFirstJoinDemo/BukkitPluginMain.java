@@ -14,14 +14,17 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.bukkit.Bukkit;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -29,14 +32,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.simsonic.rscFirstJoinDemo.Trajectory.TrajectoryPlayState;
-import ru.simsonic.rscFirstJoinDemo.Trajectory.TrajectoryPoint;
 import ru.simsonic.utilities.CommandAnswerException;
 import ru.simsonic.utilities.LanguageUtility;
 
 public final class BukkitPluginMain extends JavaPlugin implements Listener
 {
-	protected static final Logger consoleLog = Logger.getLogger("Minecraft");
+	protected static final Logger consoleLog = Bukkit.getLogger();
 	private static final String chatPrefix = "{DARKGREEN}[rscfjd] {LIGHTGREEN}";
 	private static final String defaultTrajectory = "trajectory";
 	private final TrajectoryPlayer trajectoryPlayer = new TrajectoryPlayer(this);
@@ -48,8 +49,15 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 	public void onLoad()
 	{
 		saveDefaultConfig();
-		switch(getConfig().getInt("internal.version", 1))
+		switch(getConfig().getInt("internal.version", 0))
 		{
+			case 0:
+				// EMPTY (CLEARED) CONFIG?
+				consoleLog.info("Filling config.yml with default values...");
+				getConfig().set("settings.trajectory", defaultTrajectory);
+				getConfig().set("settings.signs.note", "{GOLD}Полёт по демо!");
+				getConfig().set("internal.version", 1);
+				saveConfig();
 			case 1:
 				// NEWEST VERSION
 				break;
@@ -251,6 +259,14 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 		final String trajectoryName = sign.getLine(3);
 		final Trajectory trajectory = loadTrajectory(trajectoryName);
 		trajectoryPlayer.beginDemo(event.getPlayer(), trajectory);
+	}
+	@org.bukkit.event.EventHandler
+	public void onPlayerDamage(final EntityDamageEvent event)
+	{
+		final Entity entity = event.getEntity();
+		if(entity instanceof Player)
+			if(playing.containsKey((Player)entity))
+				event.setCancelled(true);
 	}
 	private Trajectory getBufferedTrajectory(Player player)
 	{
