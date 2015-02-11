@@ -5,7 +5,7 @@ import org.bukkit.WeatherType;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import ru.simsonic.utilities.LanguageUtility;
+import ru.simsonic.rscUtilityLibrary.TextProcessing.GenericChatCodes;
 
 public class TrajectoryPlayer
 {
@@ -118,7 +118,7 @@ public class TrajectoryPlayer
 				tps.deltaYaw = calculateYawDelta(tp1, tp2);
 				// Message on point reach
 				if(tp1.messageOnReach != null && !"".equals(tp1.messageOnReach))
-					player.sendMessage(LanguageUtility.processStringStatic(tp1.messageOnReach));
+					player.sendMessage(GenericChatCodes.processStringStatic(tp1.messageOnReach));
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached demo point #{1}", new Object[]
 				{
 					player.getDisplayName(),

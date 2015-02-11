@@ -32,8 +32,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.simsonic.utilities.CommandAnswerException;
-import ru.simsonic.utilities.LanguageUtility;
+import ru.simsonic.rscUtilityLibrary.CommandProcessing.CommandAnswerException;
+import ru.simsonic.rscUtilityLibrary.TextProcessing.GenericChatCodes;
 
 public final class BukkitPluginMain extends JavaPlugin implements Listener
 {
@@ -128,7 +128,7 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 		{
 			if(player.hasPermission("rscfjd.admin"))
 			{
-				player.sendMessage(LanguageUtility.processStringStatic(chatPrefix + "You have skipped demo due to having admin permission."));
+				player.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + "You have skipped demo due to having admin permission."));
 				consoleLog.log(Level.INFO, "[rscfjd] Skipping player {0} due to admin permission.", player.getDisplayName());
 				return;
 			}
@@ -174,7 +174,7 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 			}
 		} catch(CommandAnswerException ex) {
 			for(String answer : ex.getMessageArray())
-				sender.sendMessage(LanguageUtility.processStringStatic(chatPrefix + answer));
+				sender.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + answer));
 		}
 		return true;
 	}
@@ -196,7 +196,7 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 			result = new Gson().fromJson(jr, Trajectory.class);
 		} catch(IOException | JsonParseException ex) {
 			result = null;
-			consoleLog.log(Level.WARNING, "[rscfjd] Error reading {0}.json: {1}", new Object[] { caption, ex.toString() });
+			consoleLog.log(Level.WARNING, "[rscfjd] Error reading {0}.json: {1}", new Object[] { caption, ex });
 		}
 		if(result == null)
 			result = new Trajectory();
@@ -223,10 +223,10 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 			new Gson().toJson(trajectory, Trajectory.class, jw);
 			consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} has been saved ({1})", new Object[] { caption, trajectory.points.length });
 		} catch(IOException | JsonParseException ex) {
-			consoleLog.log(Level.WARNING, "[rscfjd] Error writing {0}.json: {1}", new Object[] { caption, ex.toString() });
+			consoleLog.log(Level.WARNING, "[rscfjd] Error writing {0}.json: {1}", new Object[] { caption, ex });
 		}
 	}
-	private final String signFirstLine = LanguageUtility.processStringStatic("{_DG}[rscFJD]");
+	private final String signFirstLine = GenericChatCodes.processStringStatic("{_DG}[rscFJD]");
 	@org.bukkit.event.EventHandler
 	public void onSignChange(final SignChangeEvent event)
 	{
@@ -235,16 +235,16 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 		final Player player = event.getPlayer();
 		if(!player.hasPermission("rscfjd.admin"))
 		{
-			player.sendMessage(LanguageUtility.processStringStatic(chatPrefix + "{_LR}Not enough permissions."));
+			player.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + "{_LR}Not enough permissions."));
 			event.setCancelled(true);
 			return;
 		}
 		event.setLine(0, signFirstLine);
 		final String flight = event.getLine(1).isEmpty() ? firstJoinTrajectory : event.getLine(1);
-		event.setLine(1, LanguageUtility.processStringStatic(
+		event.setLine(1, GenericChatCodes.processStringStatic(
 			getConfig().getString("settings.signs.note", "{_LG}Start demo")));
 		event.setLine(3, flight);
-		player.sendMessage(LanguageUtility.processStringStatic(chatPrefix + "{_LG}Done."));
+		player.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + "{_LG}Done."));
 	}
 	@org.bukkit.event.EventHandler
 	public void onSignRBClick(final PlayerInteractEvent event)
@@ -386,7 +386,7 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 				} catch(NumberFormatException ex) {
 					tp.speedAfter = 1.0f;
 				}
-				tp.messageOnReach = LanguageUtility.glue(Arrays.copyOfRange(args, 2, args.length), " ");
+				tp.messageOnReach = GenericChatCodes.glue(Arrays.copyOfRange(args, 2, args.length), " ");
 				tp.fly = true;
 				pointList.add(tp);
 				buffer.points = pointList.toArray(new TrajectoryPoint[pointList.size()]);
