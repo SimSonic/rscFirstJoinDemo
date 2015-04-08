@@ -68,6 +68,7 @@ public class TrajectoryPlayer
 				player.setAllowFlight(tps.originalFlightAllow);
 				player.setFlying(tps.originalFlightState);
 				player.setFallDistance(0.0f);
+				player.setVelocity(new Vector());
 				player.resetPlayerWeather();
 				player.resetPlayerTime();
 				plugin.getServer().getScheduler().cancelTask(tps.playTask);
@@ -166,7 +167,8 @@ public class TrajectoryPlayer
 					float fp1 = tp1.location.getPitch(), fy1 = tp1.location.getYaw();
 					target.setPitch((float)(fp1 + percent * (tp2.location.getPitch() - fp1)));
 					target.setYaw((float)(fy1 + percent * tps.deltaYaw));
-				}
+				} else
+					player.setGameMode(GameMode.SPECTATOR);
 				// Teleport
 				player.teleport(target, TeleportCause.PLUGIN);
 			} else
