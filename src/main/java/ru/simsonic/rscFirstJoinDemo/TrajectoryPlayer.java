@@ -1,10 +1,13 @@
 package ru.simsonic.rscFirstJoinDemo;
+
 import java.util.logging.Level;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.util.Vector;
 import ru.simsonic.rscUtilityLibrary.TextProcessing.GenericChatCodes;
 
 public class TrajectoryPlayer
@@ -27,15 +30,17 @@ public class TrajectoryPlayer
 			final TrajectoryPlayState tps = trajectory.newPlayState();
 			if(tps.trajectory.points.length <= 0)
 			{
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Cannot run demo for {0}, it is empty.", player.getDisplayName());
+				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Cannot run demo for {0}, it is empty.", player.getName());
 				return;
 			}
 			tps.currentPoint = -1;
 			tps.originalFlightAllow = player.getAllowFlight();
 			tps.originalFlightState = player.isFlying();
+			tps.gamemode = player.getGameMode();
 			player.setAllowFlight(true);
 			player.setFlying(true);
 			player.setPlayerWeather(WeatherType.CLEAR);
+			player.setGameMode(GameMode.SPECTATOR);
 			plugin.playing.put(player, tps);
 			tps.playTask = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
 			{
@@ -47,9 +52,9 @@ public class TrajectoryPlayer
 				}
 			}, 1, 1);
 			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Starting playing demo '{0}' to {1}",
-				new Object[] { tps.trajectory.caption, player.getDisplayName() });
+				new Object[] { tps.trajectory.caption, player.getName() });
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.SEVERE, "[rscfjd] Demo starting error: {0}", new Object[] { ex });
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo starting error: {0}", new Object[] { ex });
 		}
 	}
 	public void finishDemo(Player player)
@@ -59,8 +64,10 @@ public class TrajectoryPlayer
 			final TrajectoryPlayState tps = plugin.playing.get(player);
 			if(tps != null)
 			{
+				player.setGameMode(tps.gamemode);
 				player.setAllowFlight(tps.originalFlightAllow);
 				player.setFlying(tps.originalFlightState);
+				player.setFallDistance(0.0f);
 				player.resetPlayerWeather();
 				player.resetPlayerTime();
 				plugin.getServer().getScheduler().cancelTask(tps.playTask);
@@ -71,12 +78,12 @@ public class TrajectoryPlayer
 					player.saveData();
 				}
 				plugin.playing.remove(player);
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getDisplayName());
+				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
 			}
 			for(Player online : plugin.getServer().getOnlinePlayers())
 				online.showPlayer(player);
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.SEVERE, "[rscfjd] Demo stopping error: {0}", new Object[] { ex });
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo stopping error: {0}", new Object[] { ex });
 		}
 	}
 	private void processDemoStep(final Player player, final TrajectoryPlayState tps)
@@ -121,7 +128,7 @@ public class TrajectoryPlayer
 					player.sendMessage(GenericChatCodes.processStringStatic(tp1.messageOnReach));
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached demo point #{1}", new Object[]
 				{
-					player.getDisplayName(),
+					player.getName(),
 					tps.currentPoint
 				});
 				// Time and weather tricks
@@ -154,9 +161,7 @@ public class TrajectoryPlayer
 				if(w1 != null && w2 != null && w1.equals(w2))
 				{
 					// Find position
-					target.subtract(tp1.location);
-					target.multiply(percent);
-					target.add(tp1.location);
+					target.subtract(tp1.location).multiply(percent).add(tp1.location);
 					// Find rotation
 					float fp1 = tp1.location.getPitch(), fy1 = tp1.location.getYaw();
 					target.setPitch((float)(fp1 + percent * (tp2.location.getPitch() - fp1)));
@@ -167,7 +172,7 @@ public class TrajectoryPlayer
 			} else
 				player.teleport(tp1.location, TeleportCause.PLUGIN);
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.SEVERE, "[rscfjd] Demo processing error: {0}", new Object[] { ex });
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo processing error: {0}", new Object[] { ex });
 			finishDemo(player);
 		}
 	}
@@ -198,13 +203,5 @@ public class TrajectoryPlayer
 		if(result <= -180.0f)
 			result += 360.0f;
 		return result;
-	}
-	public Location locationForTrajectoryPoint(TrajectoryPoint tp)
-	{
-		final World world = plugin.getServer().getWorld(tp.world);
-		if(world != null)
-			return new Location(world, tp.x, tp.y, tp.z, tp.yaw, tp.pitch);
-		BukkitPluginMain.consoleLog.log(Level.SEVERE, "[rscfjd] World not found: {0}", tp.world);
-		return null;
 	}
 }

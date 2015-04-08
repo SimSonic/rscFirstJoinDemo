@@ -1,4 +1,5 @@
 package ru.simsonic.rscFirstJoinDemo;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
@@ -15,32 +16,22 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
-import org.bukkit.block.Sign;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.SignChangeEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.simsonic.rscUtilityLibrary.CommandProcessing.CommandAnswerException;
+import ru.simsonic.rscUtilityLibrary.Bukkit.Commands.CommandAnswerException;
 import ru.simsonic.rscUtilityLibrary.TextProcessing.GenericChatCodes;
 
-public final class BukkitPluginMain extends JavaPlugin implements Listener
+public final class BukkitPluginMain extends JavaPlugin
 {
-	protected static final Logger consoleLog = Bukkit.getLogger();
-	private static final String chatPrefix = "{DARKGREEN}[rscfjd] {LIGHTGREEN}";
-	private static final String defaultTrajectory = "trajectory";
-	private final TrajectoryPlayer trajectoryPlayer = new TrajectoryPlayer(this);
+	protected static final String chatPrefix        = "{DARKGREEN}[rscfjd] {LIGHTGREEN}";
+	protected static final String defaultTrajectory = "trajectory";
+	protected static final Logger consoleLog        = Bukkit.getLogger();
+	protected final BukkitPlayerListener listener = new BukkitPlayerListener(this);
+	protected final TrajectoryPlayer trajectoryPlayer = new TrajectoryPlayer(this);
 	protected final HashMap<String, Trajectory> trajectories = new HashMap<>();
 	protected final HashMap<Player, TrajectoryPlayState> playing = new HashMap<>();
 	protected final HashMap<Player, Trajectory> buffers = new HashMap<>();
@@ -76,30 +67,7 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 		getConfig().set("settings.trajectory", firstJoinTrajectory);
 		saveConfig();
 		// Register event's dispatcher
-		getServer().getPluginManager().registerEvents(this, this);
-		/*
-		// ProtocolLib
-		try
-		{
-			final org.bukkit.plugin.BukkitPluginMain plib = getServer().getPluginManager().getPlugin("ProtocolLib");
-			if(plib != null && plib instanceof ProtocolLibrary)
-			{
-				ProtocolLibrary.getProtocolManager().addPacketListener(
-					new PacketAdapter(this, ConnectionSide.SERVER_SIDE, Packets.Server.CHAT)
-					{
-						@Override
-						public void onPacketSending(PacketEvent event)
-						{
-							// КРОМЕ ТОГО СЛУЧАЯ, КОГДА МЫ ПИШЕМ СООБЩЕНИЕ ИГРОКУ —— TO DO HERE !!!
-							// if(playing.containsKey(event.getPlayer()))
-								// event.setCancelled(true);
-						}
-					});
-				consoleLog.log(Level.INFO, "[rscfjd] ProtocolLib was found and integrated.");
-			}
-		} catch(RuntimeException ex) {
-		}
-		*/
+		getServer().getPluginManager().registerEvents(listener, this);
 		// Done
 		consoleLog.log(Level.INFO, "[rscfjd] rscFirstJoinDemo has been successfully enabled.");
 	}
@@ -115,51 +83,6 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 		playing.clear();
 		trajectories.clear();
 		consoleLog.info("[rscfjd] rscFirstJoinDemo has been disabled.");
-	}
-	@EventHandler
-	public void onPlayerJoin(PlayerJoinEvent event)
-	{
-		final Player player = event.getPlayer();
-		// Hide all other demo players
-		for(Player demo : playing.keySet())
-			player.hidePlayer(demo);
-		// Check if we should show the demo for him
-		if(!player.hasPlayedBefore())
-		{
-			if(player.hasPermission("rscfjd.admin"))
-			{
-				player.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + "You have skipped demo due to having admin permission."));
-				consoleLog.log(Level.INFO, "[rscfjd] Skipping player {0} due to admin permission.", player.getDisplayName());
-				return;
-			}
-			if(lazyFirstJoinTrajectoryLoading())
-				trajectoryPlayer.beginDemo(player, trajectories.get(firstJoinTrajectory));
-		}
-	}
-	@EventHandler
-	public void onPlayerChat(AsyncPlayerChatEvent event)
-	{
-		if(playing.containsKey(event.getPlayer()))
-			event.setCancelled(true);
-		else
-			event.getRecipients().removeAll(playing.keySet());
-	}
-	@EventHandler
-	public void onPlayerCommand(PlayerCommandPreprocessEvent event)
-	{
-		final Player player = event.getPlayer();
-		if(playing.containsKey(player) && !player.hasPermission("rscfjd.admin"))
-			event.setCancelled(true);
-	}
-	@EventHandler
-	public void onPlayerQuit(PlayerQuitEvent event)
-	{
-		trajectoryPlayer.finishDemo(event.getPlayer());
-	}
-	@EventHandler
-	public void onPlayerKick(PlayerKickEvent event)
-	{
-		trajectoryPlayer.finishDemo(event.getPlayer());
 	}
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
@@ -178,14 +101,14 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 		}
 		return true;
 	}
-	private boolean lazyFirstJoinTrajectoryLoading()
+	protected boolean lazyFirstJoinTrajectoryLoading()
 	{
 		// Lazy trajectory loading
 		if(trajectories.containsKey(firstJoinTrajectory) == false)
 			loadTrajectory(firstJoinTrajectory);
 		return trajectories.containsKey(firstJoinTrajectory);
 	}
-	private Trajectory loadTrajectory(String caption)
+	protected Trajectory loadTrajectory(String caption)
 	{
 		Trajectory result;
 		caption = caption.toLowerCase();
@@ -203,13 +126,21 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 		if(result.points == null)
 			result.points = new TrajectoryPoint[] {};
 		for(TrajectoryPoint tp : result.points)
-			tp.location = trajectoryPlayer.locationForTrajectoryPoint(tp);
+			tp.location = locationForTrajectoryPoint(tp);
 		consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} has been loaded ({1})", new Object[] { caption, result.points.length });
 		result.caption = caption;
 		trajectories.put(caption, result);
 		return result;
 	}
-	private void saveTrajectory(Trajectory trajectory, String caption)
+	private Location locationForTrajectoryPoint(TrajectoryPoint tp)
+	{
+		final World world = getServer().getWorld(tp.world);
+		if(world != null)
+			return new Location(world, tp.x, tp.y, tp.z, tp.yaw, tp.pitch);
+		BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] World not found: {0}", tp.world);
+		return null;
+	}
+	protected void saveTrajectory(Trajectory trajectory, String caption)
 	{
 		if(trajectory == null)
 			return;
@@ -225,48 +156,6 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 		} catch(IOException | JsonParseException ex) {
 			consoleLog.log(Level.WARNING, "[rscfjd] Error writing {0}.json: {1}", new Object[] { caption, ex });
 		}
-	}
-	private final String signFirstLine = GenericChatCodes.processStringStatic("{_DG}[rscFJD]");
-	@org.bukkit.event.EventHandler
-	public void onSignChange(final SignChangeEvent event)
-	{
-		if(event.getLine(0).equalsIgnoreCase("[rscfjd]") == false)
-			return;
-		final Player player = event.getPlayer();
-		if(!player.hasPermission("rscfjd.admin"))
-		{
-			player.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + "{_LR}Not enough permissions."));
-			event.setCancelled(true);
-			return;
-		}
-		event.setLine(0, signFirstLine);
-		final String flight = event.getLine(1).isEmpty() ? firstJoinTrajectory : event.getLine(1);
-		event.setLine(1, GenericChatCodes.processStringStatic(
-			getConfig().getString("settings.signs.note", "{_LG}Start demo")));
-		event.setLine(3, flight);
-		player.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + "{_LG}Done."));
-	}
-	@org.bukkit.event.EventHandler
-	public void onSignRBClick(final PlayerInteractEvent event)
-	{
-		if(event.getAction() != Action.RIGHT_CLICK_BLOCK)
-			return;
-		if(!(event.getClickedBlock().getState() instanceof Sign))
-			return;
-		final Sign sign = (Sign)event.getClickedBlock().getState();
-		if(!sign.getLine(0).equals(signFirstLine))
-			return;
-		final String trajectoryName = sign.getLine(3);
-		final Trajectory trajectory = loadTrajectory(trajectoryName);
-		trajectoryPlayer.beginDemo(event.getPlayer(), trajectory);
-	}
-	@org.bukkit.event.EventHandler
-	public void onPlayerDamage(final EntityDamageEvent event)
-	{
-		final Entity entity = event.getEntity();
-		if(entity instanceof Player)
-			if(playing.containsKey((Player)entity))
-				event.setCancelled(true);
 	}
 	private Trajectory getBufferedTrajectory(Player player)
 	{
@@ -442,7 +331,7 @@ public final class BukkitPluginMain extends JavaPlugin implements Listener
 					"Usage:",
 					"{YELLOW}/rscfjd play [player name]",
 					"{YELLOW}/rscfjd stop [player name]",
-					"{YELLOW}/rscfjd addpoint <freeze ticks> <speed after (bps)> [text w/format]",
+					"{YELLOW}/rscfjd addpoint <freeze ticks> <speed after (bps)> [text w/formatting]",
 					"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file",
 					"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer",
 					"{YELLOW}/rscfjd tp <#> {_LS}- teleport on your buffer's point #",
