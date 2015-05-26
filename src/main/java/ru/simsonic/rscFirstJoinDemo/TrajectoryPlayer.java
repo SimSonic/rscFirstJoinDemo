@@ -40,7 +40,8 @@ public class TrajectoryPlayer
 			player.setAllowFlight(true);
 			player.setFlying(true);
 			player.setPlayerWeather(WeatherType.CLEAR);
-			player.setGameMode(GameMode.SPECTATOR);
+			if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
+				player.setGameMode(GameMode.SPECTATOR);
 			plugin.playing.put(player, tps);
 			tps.playTask = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
 			{
@@ -168,7 +169,8 @@ public class TrajectoryPlayer
 					target.setPitch((float)(fp1 + percent * (tp2.location.getPitch() - fp1)));
 					target.setYaw((float)(fy1 + percent * tps.deltaYaw));
 				} else
-					player.setGameMode(GameMode.SPECTATOR);
+					if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
+						player.setGameMode(GameMode.SPECTATOR);
 				// Teleport
 				player.teleport(target, TeleportCause.PLUGIN);
 			} else

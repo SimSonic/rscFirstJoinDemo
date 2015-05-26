@@ -48,8 +48,9 @@ public final class BukkitPluginMain extends JavaPlugin
 				getConfig().set("settings.trajectory", defaultTrajectory);
 				getConfig().set("settings.signs.note", "{GOLD}Полёт по демо!");
 				getConfig().set("internal.version", 1);
-				saveConfig();
 			case 1:
+				getConfig().set("settings.turn-into-spectator", getConfig().getBoolean("settings.turn-into-spectator", true));
+				saveConfig();
 				// NEWEST VERSION
 				break;
 			default:
