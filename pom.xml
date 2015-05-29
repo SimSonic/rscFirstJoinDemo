@@ -16,6 +16,10 @@
 	
 	<repositories>
 		<repository>
+			<id>methuselah-repo</id>
+			<url>http://maven.methuselah.ru/</url>
+		</repository>
+		<repository>
 			<id>spigot-repo</id>
 			<url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
 		</repository>
