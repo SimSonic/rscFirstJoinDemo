@@ -97,7 +97,7 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<minimizeJar>true</minimizeJar>
+							<minimizeJar>false</minimizeJar>
 							<artifactSet>
 								<includes>
 									<include>ru.simsonic:rscUtilityLibrary</include>
