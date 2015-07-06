@@ -22,8 +22,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.simsonic.rscUtilityLibrary.Bukkit.Commands.CommandAnswerException;
-import ru.simsonic.rscUtilityLibrary.TextProcessing.GenericChatCodes;
+import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
+import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
 public final class BukkitPluginMain extends JavaPlugin
 {

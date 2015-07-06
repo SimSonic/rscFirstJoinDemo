@@ -15,7 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import ru.simsonic.rscUtilityLibrary.TextProcessing.GenericChatCodes;
+import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
 public class BukkitPlayerListener implements Listener
 {

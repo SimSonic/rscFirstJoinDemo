@@ -4,7 +4,7 @@
 
 	<groupId>ru.simsonic</groupId>
 	<artifactId>rscFirstJoinDemo</artifactId>
-	<version>0.5.8b</version>
+	<version>0.5.9b</version>
 	<packaging>jar</packaging>
 
 	<name>rscFirstJoinDemo</name>
@@ -52,10 +52,15 @@
 		</dependency>
 		<dependency>
 			<groupId>ru.simsonic</groupId>
-			<artifactId>rscUtilityLibrary</artifactId>
-			<version>2.0.4</version>
+			<artifactId>rscCommonsLibrary</artifactId>
+			<version>2.1.0</version>
 			<scope>compile</scope>
-			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ru.simsonic</groupId>
+			<artifactId>rscMinecraftLibrary</artifactId>
+			<version>2.1.0</version>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 	
@@ -100,24 +105,23 @@
 							<minimizeJar>false</minimizeJar>
 							<artifactSet>
 								<includes>
-									<include>ru.simsonic:rscUtilityLibrary</include>
+									<include>ru.simsonic:rscCommonsLibrary</include>
+									<include>ru.simsonic:rscMinecraftLibrary</include>
 									<include>com.google.**:**</include>
 								</includes>
 							</artifactSet>
 							<relocations>
 								<relocation>
-									<pattern>ru.simsonic.rscUtilityLibrary</pattern>
-									<shadedPattern>${project.groupId}.${project.artifactId}.rscUtilityLibrary-shaded</shadedPattern>
-									<includes>
-										<include>ru.simsonic.rscUtilityLibrary.*</include>
-									</includes>
-								</relocation>
-								<relocation>
 									<pattern>com.google.gson</pattern>
 									<shadedPattern>${project.groupId}.${project.artifactId}.com-google-gson-shaded</shadedPattern>
-									<includes>
-										<include>com.google.gson.*</include>
-									</includes>
+								</relocation>
+								<relocation>
+									<pattern>ru.simsonic.rscCommonsLibrary</pattern>
+									<shadedPattern>${project.groupId}.${project.artifactId}.rscCommonsLibrary-shaded</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>ru.simsonic.rscMinecraftLibrary</pattern>
+									<shadedPattern>${project.groupId}.${project.artifactId}.rscMinecraftLibrary-shaded</shadedPattern>
 								</relocation>
 							</relocations>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
