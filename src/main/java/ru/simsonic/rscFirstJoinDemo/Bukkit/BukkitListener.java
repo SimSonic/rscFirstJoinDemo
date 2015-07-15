@@ -1,4 +1,4 @@
-package ru.simsonic.rscFirstJoinDemo;
+package ru.simsonic.rscFirstJoinDemo.Bukkit;
 
 import java.util.logging.Level;
 import org.bukkit.block.Sign;
@@ -15,12 +15,15 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import ru.simsonic.rscFirstJoinDemo.API.Settings;
+import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
+import ru.simsonic.rscFirstJoinDemo.Trajectory;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
-public class BukkitPlayerListener implements Listener
+public class BukkitListener implements Listener
 {
 	private final BukkitPluginMain rscfjd;
-	public BukkitPlayerListener(BukkitPluginMain plugin)
+	public BukkitListener(BukkitPluginMain plugin)
 	{
 		this.rscfjd = plugin;
 	}
@@ -37,7 +40,7 @@ public class BukkitPlayerListener implements Listener
 			if(player.hasPermission("rscfjd.admin"))
 			{
 				player.sendMessage(GenericChatCodes.processStringStatic(
-					BukkitPluginMain.chatPrefix + "You have skipped demo due to having admin permission."));
+					Settings.chatPrefix + "You have skipped demo due to having admin permission."));
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Skipping player {0} due to admin permission.", player.getName());
 				return;
 			}
@@ -80,7 +83,7 @@ public class BukkitPlayerListener implements Listener
 		if(!player.hasPermission("rscfjd.admin"))
 		{
 			player.sendMessage(GenericChatCodes.processStringStatic(
-				BukkitPluginMain.chatPrefix + "{_LR}Not enough permissions."));
+				Settings.chatPrefix + "{_LR}Not enough permissions."));
 			event.setCancelled(true);
 			return;
 		}
@@ -90,7 +93,7 @@ public class BukkitPlayerListener implements Listener
 			rscfjd.getConfig().getString("settings.signs.note", "{_LG}Start demo")));
 		event.setLine(3, flight);
 		player.sendMessage(GenericChatCodes.processStringStatic(
-			BukkitPluginMain.chatPrefix + "{_LG}Done."));
+			Settings.chatPrefix + "{_LG}Done."));
 	}
 	@org.bukkit.event.EventHandler
 	public void onSignRBClick(final PlayerInteractEvent event)

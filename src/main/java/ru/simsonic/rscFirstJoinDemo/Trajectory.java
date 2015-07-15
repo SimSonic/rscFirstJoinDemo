@@ -1,6 +1,9 @@
 package ru.simsonic.rscFirstJoinDemo;
 
-public class Trajectory
+import ru.simsonic.rscFirstJoinDemo.API.GenericPoint;
+import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
+
+public class Trajectory<T extends GenericPoint>
 {
 	public transient String caption;
 	public TrajectoryPoint[] points = new TrajectoryPoint[] {};

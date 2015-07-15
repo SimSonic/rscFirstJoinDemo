@@ -1,4 +1,5 @@
 package ru.simsonic.rscFirstJoinDemo;
+
 import org.bukkit.GameMode;
 
 public class TrajectoryPlayState
