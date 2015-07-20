@@ -133,7 +133,7 @@ public class TrajectoryPlayer
 				{
 					tps.trajectory.caption,
 					player.getName(),
-					tps.currentPoint
+					tps.currentPoint,
 				});
 				// Time and weather tricks
 				if(tp1.timeReset)
@@ -155,7 +155,7 @@ public class TrajectoryPlayer
 				currentSegmentTimeSpent -= tp1.freezeTicks;
 				final TrajectoryPoint tp2 = tps.trajectory.points[tps.currentPoint + 1];
 				final double percent = (tps.currentSegmentFlightTime != 0)
-					? currentSegmentTimeSpent * 1.0 / tps.currentSegmentFlightTime
+					? (currentSegmentTimeSpent + 1) * 1.0 / tps.currentSegmentFlightTime
 					: 1.0;
 				final Location target = tp2.location.clone();
 				final World w1 = tp1.location.getWorld();
@@ -165,18 +165,18 @@ public class TrajectoryPlayer
 					// Find position
 					target.subtract(tp1.location).multiply(percent).add(tp1.location);
 					// Find rotation
-					float fp1 = tp1.location.getPitch(), fy1 = tp1.location.getYaw();
+					final float fp1 = tp1.location.getPitch(), fy1 = tp1.location.getYaw();
 					target.setPitch((float)(fp1 + percent * (tp2.location.getPitch() - fp1)));
 					target.setYaw((float)(fy1 + percent * tps.deltaYaw));
-				} else
-					if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
-						player.setGameMode(GameMode.SPECTATOR);
+				}
 				// Teleport
 				player.teleport(target, TeleportCause.PLUGIN);
 			} else {
 				player.teleport(tp1.location, TeleportCause.PLUGIN);
 				player.setAllowFlight(true);
 				player.setFlying(true);
+				if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
+					player.setGameMode(GameMode.SPECTATOR);
 			}
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo processing error: {0}", new Object[] { ex });
@@ -195,7 +195,7 @@ public class TrajectoryPlayer
 				final World w1 = l1.getWorld();
 				final World w2 = l2.getWorld();
 				if(w1 != null && w2 != null && w1.equals(w2))
-					result += Math.floor(l1.distance(l2) * 20.0f / tp1.speedAfter) + 1;
+					result += Math.floor(0.5 + l1.distance(l2) * 20.0 / tp1.speedAfter) ;
 			}
 		}
 		return result;

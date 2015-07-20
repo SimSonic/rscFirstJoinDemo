@@ -1,15 +1,7 @@
 package ru.simsonic.rscFirstJoinDemo;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,7 +11,9 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.simsonic.rscCommonsLibrary.HashAndCipherUtilities;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitCommands;
@@ -36,7 +30,7 @@ public final class BukkitPluginMain extends JavaPlugin
 	public final HashMap<Player, TrajectoryPlayState> playing = new HashMap<>();
 	public final HashMap<Player, Trajectory> buffers = new HashMap<>();
 	public final BukkitCommands commands = new BukkitCommands(this);
-	public String firstJoinTrajectory;
+	public String firstJoinTrajectory = Settings.defaultTrajectory;
 	@Override
 	public void onLoad()
 	{
@@ -92,15 +86,21 @@ public final class BukkitPluginMain extends JavaPlugin
 		try
 		{
 			if(args.length == 0)
-				throw new CommandAnswerException( "{_LP}" + getDescription().getName()
-					+ " {_LS}" + getDescription().getVersion()
-					+ "{_LP} © " + getDescription().getAuthors().get(0));
-			switch(label.toLowerCase())
+			{
+				final PluginDescriptionFile desc = this.getDescription();
+				throw new CommandAnswerException(new String[]
+				{
+					"{_LP}" + desc.getName() + " {_LS}" + desc.getVersion() + "{_LP} © " + desc.getAuthors().get(0),
+					"{_LP}Website: {GOLD}" + desc.getWebsite(),
+				});
+			}
+			switch(command.getName().toLowerCase())
 			{
 				case "rscfjd":
 					commands.execute(sender, args);
-					break;
+					return true;
 			}
+			return false;
 		} catch(CommandAnswerException ex) {
 			for(String answer : ex.getMessageArray())
 				sender.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + answer));
@@ -119,21 +119,18 @@ public final class BukkitPluginMain extends JavaPlugin
 		Trajectory result;
 		caption = caption.toLowerCase();
 		// Load default currentTrajectory
-		try(FileInputStream fis = new FileInputStream(new File(getDataFolder(), caption + ".json")))
+		try
 		{
-			final JsonReader jr = new JsonReader(new InputStreamReader(fis, "UTF-8"));
-			result = new Gson().fromJson(jr, Trajectory.class);
-		} catch(IOException | JsonParseException ex) {
-			result = null;
+			result = HashAndCipherUtilities.loadObject(new File(getDataFolder(), caption + ".json"), Trajectory.class);
+		} catch(IOException ex) {
 			consoleLog.log(Level.WARNING, "[rscfjd] Error reading {0}.json: {1}", new Object[] { caption, ex });
-		}
-		if(result == null)
 			result = new Trajectory();
+		}
 		if(result.points == null)
 			result.points = new TrajectoryPoint[] {};
 		for(TrajectoryPoint tp : result.points)
 			tp.location = locationForTrajectoryPoint(tp);
-		consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} has been loaded ({1})", new Object[] { caption, result.points.length });
+		consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} contains ({1} points)", new Object[] { caption, result.points.length });
 		result.caption = caption;
 		trajectories.put(caption, result);
 		return result;
@@ -151,15 +148,11 @@ public final class BukkitPluginMain extends JavaPlugin
 		if(trajectory == null)
 			return;
 		caption = caption.toLowerCase();
-		try(JsonWriter jw = new JsonWriter(
-			new OutputStreamWriter(new FileOutputStream(
-				new File(getDataFolder(), caption + ".json")), "UTF-8")))
+		try
 		{
-			jw.setIndent(" ");
-			jw.setSerializeNulls(false);
-			new Gson().toJson(trajectory, Trajectory.class, jw);
+			HashAndCipherUtilities.saveObject(new File(getDataFolder(), caption + ".json"), trajectory, Trajectory.class);
 			consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} has been saved ({1})", new Object[] { caption, trajectory.points.length });
-		} catch(IOException | JsonParseException ex) {
+		} catch(IOException ex) {
 			consoleLog.log(Level.WARNING, "[rscfjd] Error writing {0}.json: {1}", new Object[] { caption, ex });
 		}
 	}

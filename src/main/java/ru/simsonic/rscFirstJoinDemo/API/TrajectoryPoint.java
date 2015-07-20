@@ -7,13 +7,13 @@ public class TrajectoryPoint extends SightedPoint
 	public float   speedAfter;
 	public String  messageOnReach;
 	public int     freezeTicks;
+	public boolean timeReset;
 	public boolean timeUpdate;
 	public long    timeUpdateValue;
 	public boolean timeUpdateLock;
-	public boolean timeReset;
+	public boolean weatherReset;
 	public boolean weatherUpdate;
 	public boolean weatherUpdateStormy;
-	public boolean weatherReset;
 	public TrajectoryPoint()
 	{
 	}
