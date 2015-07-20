@@ -111,19 +111,20 @@ public class BukkitCommands
 					try
 					{
 						tp.freezeTicks = Integer.parseInt(args[0]);
-					} catch(NumberFormatException ex)
-					{
-						tp.freezeTicks = 0;
+					} catch(NullPointerException ex) {
+						throw new CommandAnswerException("{_LR}Not enough args.");
+					} catch(NumberFormatException ex) {
+						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
 					}
 					try
 					{
 						tp.speedAfter = Float.parseFloat(args[1]);
-					} catch(NumberFormatException ex)
-					{
-						tp.speedAfter = 1.0F;
+					} catch(NullPointerException ex) {
+						throw new CommandAnswerException("{_LR}Not enough args.");
+					} catch(NumberFormatException ex) {
+						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[1]);
 					}
 					tp.messageOnReach = GenericChatCodes.glue(Arrays.copyOfRange(args, 2, args.length), " ");
-					tp.fly = true;
 					pointList.add(tp);
 					buffer.points = pointList.toArray(new TrajectoryPoint[pointList.size()]);
 					throw new CommandAnswerException("Done #" + pointList.size());
@@ -140,8 +141,7 @@ public class BukkitCommands
 					try
 					{
 						teleport_id = Integer.parseInt(args[0]);
-					} catch(NumberFormatException ex)
-					{
+					} catch(NumberFormatException ex) {
 						teleport_id = buffer.points.length - 1;
 					}
 					if(teleport_id >= 0 && teleport_id < buffer.points.length)
@@ -158,7 +158,9 @@ public class BukkitCommands
 					final ArrayList<String> answer = new ArrayList<>();
 					answer.add("Current configuration:");
 					answer.add("firstJoinTrajectory: {_YL}" + plugin.firstJoinTrajectory);
-					answer.add("firstJoinTrajectory is " + (plugin.trajectories.containsKey(plugin.firstJoinTrajectory) ? "{_DR}not loaded yet" : "{_DG}already loaded"));
+					answer.add("firstJoinTrajectory is " + (plugin.trajectories.containsKey(plugin.firstJoinTrajectory)
+						? "{_DG}already loaded"
+						: "{_DR}not loaded yet"));
 					if(plugin.trajectories.containsKey(plugin.firstJoinTrajectory))
 						answer.add("firstJoinTrajectory contains points: {WHITE}" + plugin.trajectories.get(plugin.firstJoinTrajectory).points.length);
 					if(plugin.buffers.containsKey((Player)sender))
@@ -170,7 +172,18 @@ public class BukkitCommands
 				break;
 			case "help":
 				if(sender.hasPermission("rscfjd.admin"))
-					throw new CommandAnswerException(new String[] { "Usage:", "{YELLOW}/rscfjd play [player name]", "{YELLOW}/rscfjd stop [player name]", "{YELLOW}/rscfjd addpoint <freeze ticks> <speed after (bps)> [text w/formatting]", "{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file", "{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer", "{YELLOW}/rscfjd tp <#> {_LS}- teleport on your buffer's point #", "{YELLOW}/rscfjd clear {_LS}- clears your buffer", "{YELLOW}/rscfjd reload" });
+					throw new CommandAnswerException(new String[]
+					{
+						"Usage:",
+						"{YELLOW}/rscfjd play [player name]",
+						"{YELLOW}/rscfjd stop [player name]",
+						"{YELLOW}/rscfjd addpoint <freeze ticks> <speed after (bps)> [text w/formatting]",
+						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file",
+						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer",
+						"{YELLOW}/rscfjd tp <#> {_LS}- teleport on your buffer's point #",
+						"{YELLOW}/rscfjd clear {_LS}- clears your buffer",
+						"{YELLOW}/rscfjd reload",
+					});
 				break;
 			case "reload":
 				if(sender.hasPermission("rscfjd.admin"))

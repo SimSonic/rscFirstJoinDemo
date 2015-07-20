@@ -6,7 +6,6 @@ public class TrajectoryPoint extends SightedPoint
 {
 	public float   speedAfter;
 	public String  messageOnReach;
-	public boolean fly;
 	public int     freezeTicks;
 	public boolean timeUpdate;
 	public long    timeUpdateValue;

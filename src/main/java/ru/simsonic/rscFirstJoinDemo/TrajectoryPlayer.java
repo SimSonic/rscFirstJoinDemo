@@ -129,8 +129,9 @@ public class TrajectoryPlayer
 				// Message on point reach
 				if(tp1.messageOnReach != null && !"".equals(tp1.messageOnReach))
 					player.sendMessage(GenericChatCodes.processStringStatic(tp1.messageOnReach));
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached demo point #{1}", new Object[]
+				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached {1} #{2}", new Object[]
 				{
+					tps.trajectory.caption,
 					player.getName(),
 					tps.currentPoint
 				});
@@ -147,8 +148,6 @@ public class TrajectoryPlayer
 						player.setPlayerWeather(tp1.weatherUpdateStormy ? WeatherType.DOWNFALL : WeatherType.CLEAR);
 			}
 			final TrajectoryPoint tp1 = tps.trajectory.points[tps.currentPoint];
-			player.setAllowFlight(true);
-			player.setFlying(tp1.fly);
 			long currentSegmentTimeSpent = tps.localTick - tps.currentPointStartTick;
 			// Teleport player to the next position
 			if(currentSegmentTimeSpent >= tp1.freezeTicks)
@@ -174,8 +173,11 @@ public class TrajectoryPlayer
 						player.setGameMode(GameMode.SPECTATOR);
 				// Teleport
 				player.teleport(target, TeleportCause.PLUGIN);
-			} else
+			} else {
 				player.teleport(tp1.location, TeleportCause.PLUGIN);
+				player.setAllowFlight(true);
+				player.setFlying(true);
+			}
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo processing error: {0}", new Object[] { ex });
 			finishDemo(player);
@@ -193,7 +195,7 @@ public class TrajectoryPlayer
 				final World w1 = l1.getWorld();
 				final World w2 = l2.getWorld();
 				if(w1 != null && w2 != null && w1.equals(w2))
-					result += Math.ceil(0.5 + l1.distance(l2) * 20.0f / tp1.speedAfter);
+					result += Math.floor(l1.distance(l2) * 20.0f / tp1.speedAfter) + 1;
 			}
 		}
 		return result;
