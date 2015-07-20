@@ -76,8 +76,9 @@ public class BukkitCommands
 						throw new CommandAnswerException("Cannot find such player.");
 					if(plugin.buffers.containsKey(play_player))
 						plugin.trajectoryPlayer.beginDemo(play_player, plugin.buffers.get(play_player));
-					else if(plugin.lazyFirstJoinTrajectoryLoading())
-						plugin.trajectoryPlayer.beginDemo(play_player, plugin.trajectories.get(plugin.firstJoinTrajectory));
+					else
+						if(plugin.lazyFirstJoinTrajectoryLoading())
+							plugin.trajectoryPlayer.beginDemo(play_player, plugin.trajectories.get(plugin.firstJoinTrajectory));
 					return;
 				}
 				break;

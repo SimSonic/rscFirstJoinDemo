@@ -155,7 +155,7 @@ public class TrajectoryPlayer
 				currentSegmentTimeSpent -= tp1.freezeTicks;
 				final TrajectoryPoint tp2 = tps.trajectory.points[tps.currentPoint + 1];
 				final double percent = (tps.currentSegmentFlightTime != 0)
-					? (currentSegmentTimeSpent + 1) * 1.0 / tps.currentSegmentFlightTime
+					? currentSegmentTimeSpent * 1.0 / tps.currentSegmentFlightTime
 					: 1.0;
 				final Location target = tp2.location.clone();
 				final World w1 = tp1.location.getWorld();
@@ -195,7 +195,7 @@ public class TrajectoryPlayer
 				final World w1 = l1.getWorld();
 				final World w2 = l2.getWorld();
 				if(w1 != null && w2 != null && w1.equals(w2))
-					result += Math.floor(0.5 + l1.distance(l2) * 20.0 / tp1.speedAfter) ;
+					result += Math.floor(l1.distance(l2) * 20.0 / tp1.speedAfter) + 2;
 			}
 		}
 		return result;
