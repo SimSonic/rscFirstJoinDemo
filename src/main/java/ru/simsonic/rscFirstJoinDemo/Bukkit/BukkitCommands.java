@@ -112,7 +112,7 @@ public class BukkitCommands
 					try
 					{
 						tp.freezeTicks = Integer.parseInt(args[0]);
-					} catch(NullPointerException ex) {
+					} catch(ArrayIndexOutOfBoundsException | NullPointerException ex) {
 						throw new CommandAnswerException("{_LR}Not enough args.");
 					} catch(NumberFormatException ex) {
 						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
@@ -120,7 +120,7 @@ public class BukkitCommands
 					try
 					{
 						tp.speedAfter = Float.parseFloat(args[1]);
-					} catch(NullPointerException ex) {
+					} catch(ArrayIndexOutOfBoundsException | NullPointerException ex) {
 						throw new CommandAnswerException("{_LR}Not enough args.");
 					} catch(NumberFormatException ex) {
 						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[1]);

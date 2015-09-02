@@ -56,7 +56,7 @@ public class TrajectoryPlayer
 			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Starting playing demo '{0}' to {1}",
 				new Object[] { tps.trajectory.caption, player.getName() });
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo starting error: {0}", new Object[] { ex });
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo starting error: {0}", ex);
 		}
 	}
 	public void finishDemo(Player player)
@@ -86,7 +86,7 @@ public class TrajectoryPlayer
 			for(Player online : plugin.getServer().getOnlinePlayers())
 				online.showPlayer(player);
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo stopping error: {0}", new Object[] { ex });
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo stopping error: {0}", ex);
 		}
 	}
 	private void processDemoStep(final Player player, final TrajectoryPlayState tps)
@@ -106,81 +106,89 @@ public class TrajectoryPlayer
 			}
 			// Is current segment finished?
 			if(tps.localTick - tps.currentPointStartTick >= tps.currentSegmentFlightTime)
-			{
-				// I should look for next point with location != null
-				for(tps.currentPoint += 1; tps.currentPoint < tps.trajectory.points.length; tps.currentPoint += 1)
-					if(tps.trajectory.points[tps.currentPoint].location != null)
-						break;
-				// Was it the last segment?
-				if(tps.currentPoint >= tps.trajectory.points.length)
-				{
-					finishDemo(player);
-					return;
-				}
-				tps.currentPointStartTick = tps.localTick;
-				// Isn't it the last point?
-				final int nextPossiblePoint = tps.currentPoint + 1;
-				final TrajectoryPoint tp1 = tps.trajectory.points[tps.currentPoint];
-				final TrajectoryPoint tp2 = (nextPossiblePoint < tps.trajectory.points.length)
-					? tps.trajectory.points[nextPossiblePoint]
-					: null;
-				tps.currentSegmentFlightTime = calculateFlightTime(tp1, tp2);
-				tps.deltaYaw = calculateYawDelta(tp1, tp2);
-				// Message on point reach
-				if(tp1.messageOnReach != null && !"".equals(tp1.messageOnReach))
-					player.sendMessage(GenericChatCodes.processStringStatic(tp1.messageOnReach));
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached {1} #{2}", new Object[]
-				{
-					tps.trajectory.caption,
-					player.getName(),
-					tps.currentPoint,
-				});
-				// Time and weather tricks
-				if(tp1.timeReset)
-					player.resetPlayerTime();
-				else
-					if(tp1.timeUpdate)
-						player.setPlayerTime(tp1.timeUpdateValue, !tp1.timeUpdateLock);
-				if(tp1.weatherReset)
-					player.resetPlayerWeather();
-				else
-					if(tp1.weatherUpdate)
-						player.setPlayerWeather(tp1.weatherUpdateStormy ? WeatherType.DOWNFALL : WeatherType.CLEAR);
-			}
-			final TrajectoryPoint tp1 = tps.trajectory.points[tps.currentPoint];
-			long currentSegmentTimeSpent = tps.localTick - tps.currentPointStartTick;
-			// Teleport player to the next position
-			if(currentSegmentTimeSpent >= tp1.freezeTicks)
-			{
-				currentSegmentTimeSpent -= tp1.freezeTicks;
-				final TrajectoryPoint tp2 = tps.trajectory.points[tps.currentPoint + 1];
-				final double percent = (tps.currentSegmentFlightTime != 0)
-					? currentSegmentTimeSpent * 1.0 / tps.currentSegmentFlightTime
-					: 1.0;
-				final Location target = tp2.location.clone();
-				final World w1 = tp1.location.getWorld();
-				final World w2 = tp2.location.getWorld();
-				if(w1 != null && w2 != null && w1.equals(w2))
-				{
-					// Find position
-					target.subtract(tp1.location).multiply(percent).add(tp1.location);
-					// Find rotation
-					final float fp1 = tp1.location.getPitch(), fy1 = tp1.location.getYaw();
-					target.setPitch((float)(fp1 + percent * (tp2.location.getPitch() - fp1)));
-					target.setYaw((float)(fy1 + percent * tps.deltaYaw));
-				}
-				// Teleport
-				player.teleport(target, TeleportCause.PLUGIN);
-			} else {
-				player.teleport(tp1.location, TeleportCause.PLUGIN);
-				player.setAllowFlight(true);
-				player.setFlying(true);
-				if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
-					player.setGameMode(GameMode.SPECTATOR);
-			}
+				onCurrentSegmentFinished(player, tps);
+			// Process next step on the current point
+			onMakingNextStep(player, tps);
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo processing error: {0}", new Object[] { ex });
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo processing error: {0}", ex);
 			finishDemo(player);
+		}
+	}
+	private void onCurrentSegmentFinished(final Player player, final TrajectoryPlayState tps)
+	{
+		// I should look for next point with location != null
+		for(tps.currentPoint += 1; tps.currentPoint < tps.trajectory.points.length; tps.currentPoint += 1)
+			if(tps.trajectory.points[tps.currentPoint].location != null)
+				break;
+		// Was it the last segment?
+		if(tps.currentPoint >= tps.trajectory.points.length)
+		{
+			finishDemo(player);
+			return;
+		}
+		tps.currentPointStartTick = tps.localTick;
+		// Isn't it the last point?
+		final int nextPossiblePoint = tps.currentPoint + 1;
+		final TrajectoryPoint tp1 = tps.trajectory.points[tps.currentPoint];
+		final TrajectoryPoint tp2 = (nextPossiblePoint < tps.trajectory.points.length)
+			? tps.trajectory.points[nextPossiblePoint]
+			: null;
+		tps.currentSegmentFlightTime = calculateFlightTime(tp1, tp2);
+		tps.deltaYaw = calculateYawDelta(tp1, tp2);
+		// Log into console about this event
+		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached {1} #{2}", new Object[]
+		{
+			player.getName(),
+			tps.trajectory.caption,
+			tps.currentPoint,
+		});
+		// Message on point reach
+		if(tp1.messageOnReach != null && !"".equals(tp1.messageOnReach))
+			player.sendMessage(GenericChatCodes.processStringStatic(tp1.messageOnReach));
+		// Time and weather tricks
+		if(tp1.timeReset)
+			player.resetPlayerTime();
+		else
+			if(tp1.timeUpdate)
+				player.setPlayerTime(tp1.timeUpdateValue, !tp1.timeUpdateLock);
+		if(tp1.weatherReset)
+			player.resetPlayerWeather();
+		else
+			if(tp1.weatherUpdate)
+				player.setPlayerWeather(tp1.weatherUpdateStormy ? WeatherType.DOWNFALL : WeatherType.CLEAR);
+	}
+	private void onMakingNextStep(final Player player, final TrajectoryPlayState tps)
+	{
+		final TrajectoryPoint tp1 = tps.trajectory.points[tps.currentPoint];
+		long currentSegmentTimeSpent = tps.localTick - tps.currentPointStartTick;
+		// Teleport player to the next position
+		if(currentSegmentTimeSpent >= tp1.freezeTicks)
+		{
+			currentSegmentTimeSpent -= tp1.freezeTicks;
+			final TrajectoryPoint tp2 = tps.trajectory.points[tps.currentPoint + 1];
+			final double percent = (tps.currentSegmentFlightTime != 0)
+				? currentSegmentTimeSpent * 1.0 / tps.currentSegmentFlightTime
+				: 1.0;
+			final Location target = tp2.location.clone();
+			final World w1 = tp1.location.getWorld();
+			final World w2 = tp2.location.getWorld();
+			if(w1 != null && w2 != null && w1.equals(w2))
+			{
+				// Find position
+				target.subtract(tp1.location).multiply(percent).add(tp1.location);
+				// Find rotation
+				final float fp1 = tp1.location.getPitch(), fy1 = tp1.location.getYaw();
+				target.setPitch((float)(fp1 + percent * (tp2.location.getPitch() - fp1)));
+				target.setYaw((float)(fy1 + percent * tps.deltaYaw));
+			}
+			// Teleport
+			player.teleport(target, TeleportCause.PLUGIN);
+		} else {
+			player.teleport(tp1.location, TeleportCause.PLUGIN);
+			player.setAllowFlight(true);
+			player.setFlying(true);
+			if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
+				player.setGameMode(GameMode.SPECTATOR);
 		}
 	}
 	private long calculateFlightTime(TrajectoryPoint tp1, TrajectoryPoint tp2)
