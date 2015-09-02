@@ -15,4 +15,5 @@ public class TrajectoryPlayState
 	public float      deltaYaw;
 	public long       localTick;
 	public GameMode   gamemode;
+	public boolean    protocolLibFound;
 }

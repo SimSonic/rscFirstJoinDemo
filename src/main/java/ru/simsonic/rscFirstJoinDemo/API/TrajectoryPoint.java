@@ -14,6 +14,9 @@ public class TrajectoryPoint extends SightedPoint
 	public boolean weatherReset;
 	public boolean weatherUpdate;
 	public boolean weatherUpdateStormy;
+	public String  showTitle;
+	public String  showSubtitle;
+	public int     showTitleTicks;
 	public TrajectoryPoint()
 	{
 	}

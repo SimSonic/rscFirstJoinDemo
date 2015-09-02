@@ -1,12 +1,14 @@
 package ru.simsonic.rscFirstJoinDemo;
 
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
@@ -34,6 +36,12 @@ public class TrajectoryPlayer
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Cannot run demo for {0}, it is empty.", player.getName());
 				return;
 			}
+			// Integrate with ProtocolLib 3.6.4+ to show titles!
+			final Plugin protocolLib = plugin.getServer().getPluginManager().getPlugin("ProtocolLib");
+			tps.protocolLibFound = (protocolLib != null && protocolLib.isEnabled());
+			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] ProtocolLib is {0}",
+				tps.protocolLibFound ? "found." : "not found. Titles are disabled.");
+			// Other setup
 			tps.currentPoint = -1;
 			tps.originalFlightAllow = player.getAllowFlight();
 			tps.originalFlightState = player.isFlying();
@@ -156,6 +164,59 @@ public class TrajectoryPlayer
 		else
 			if(tp1.weatherUpdate)
 				player.setPlayerWeather(tp1.weatherUpdateStormy ? WeatherType.DOWNFALL : WeatherType.CLEAR);
+		// Title/subtitle on point reach
+		if(tps.protocolLibFound)
+		{
+			// boolean canUseSubtitle = true;
+			String title = tp1.showTitle != null && !"".equals(tp1.showTitle)
+				? tp1.showTitle
+				: null;
+			String subtitle = tp1.showSubtitle != null && !"".equals(tp1.showSubtitle)
+				? tp1.showSubtitle
+				: null;
+			try
+			{
+				if(title != null || subtitle != null)
+					sendTitle(player, title, subtitle, 20, tp1.showTitleTicks, 20);
+			} catch(Exception ex) {
+				BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] ProtocolLib error, disabling titles.\n{0}", ex);
+				tps.protocolLibFound = false;
+			}
+		}
+	}
+	public static void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) throws Exception
+	{
+		final com.comphenix.protocol.ProtocolManager protocolMan
+			= com.comphenix.protocol.ProtocolLibrary.getProtocolManager();
+		final com.comphenix.protocol.PacketType packetType
+			= com.comphenix.protocol.PacketType.Play.Server.TITLE;
+		// Prepare timings
+		final com.comphenix.protocol.events.PacketContainer pTimeTitle
+			= protocolMan.createPacket(packetType);
+		pTimeTitle.getIntegers().
+			write(0, fadeIn).
+			write(1, stay).
+			write(2, fadeOut);
+		pTimeTitle.getTitleActions().write(0,
+			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TIMES);
+		// Prepare title
+		final com.comphenix.protocol.events.PacketContainer pSubTitle
+			= protocolMan.createPacket(packetType);
+		pSubTitle.getChatComponents().write(0,
+			com.comphenix.protocol.wrappers.WrappedChatComponent.fromJson(subtitle));
+		pSubTitle.getTitleActions().write(0,
+			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
+		// Prepare subtitle
+		final com.comphenix.protocol.events.PacketContainer pTitle
+			= protocolMan.createPacket(packetType);
+		pTitle.getChatComponents().write(0,
+			com.comphenix.protocol.wrappers.WrappedChatComponent.fromJson(title));
+		pTitle.getTitleActions().write(0,
+			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
+		// Send packets!
+		protocolMan.sendServerPacket(player, pTimeTitle);
+		protocolMan.sendServerPacket(player, pSubTitle);
+		protocolMan.sendServerPacket(player, pTitle);
 	}
 	private void onMakingNextStep(final Player player, final TrajectoryPlayState tps)
 	{

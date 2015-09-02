@@ -4,7 +4,7 @@
 
 	<groupId>ru.simsonic</groupId>
 	<artifactId>rscFirstJoinDemo</artifactId>
-	<version>0.5.12b</version>
+	<version>0.6.0b</version>
 	<packaging>jar</packaging>
 
 	<name>rscFirstJoinDemo</name>
@@ -35,12 +35,16 @@
 			<id>sk89q-repo</id>
 			<url>http://maven.sk89q.com/repo/</url>
 		</repository>
+		<repository>
+			<id>dmulloy2-repo</id>
+			<url>http://repo.dmulloy2.net/content/groups/public/</url>
+		</repository>
 	</repositories>
 	
 	<dependencies>
 		<dependency>
-			<groupId>org.bukkit</groupId>
-			<artifactId>bukkit</artifactId>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot-api</artifactId>
 			<version>1.8-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
@@ -61,6 +65,12 @@
 			<artifactId>rscMinecraftLibrary</artifactId>
 			<version>2.1.0</version>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.comphenix.protocol</groupId>
+			<artifactId>ProtocolLib</artifactId>
+			<version>3.6.4</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	
