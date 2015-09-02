@@ -1,7 +1,6 @@
 package ru.simsonic.rscFirstJoinDemo;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
@@ -36,6 +35,11 @@ public class TrajectoryPlayer
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Cannot run demo for {0}, it is empty.", player.getName());
 				return;
 			}
+			// Integrate with PlaceholderAPI
+			final Plugin  placeholder = plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI");
+			tps.usePlaceholders = (placeholder != null && placeholder.isEnabled());
+			if(tps.usePlaceholders)
+				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] I will use PlaceholderAPI for pre-processing text/titles");
 			// Integrate with ProtocolLib 3.6.4+ to show titles!
 			final Plugin protocolLib = plugin.getServer().getPluginManager().getPlugin("ProtocolLib");
 			tps.protocolLibFound = (protocolLib != null && protocolLib.isEnabled());
@@ -116,7 +120,8 @@ public class TrajectoryPlayer
 			if(tps.localTick - tps.currentPointStartTick >= tps.currentSegmentFlightTime)
 				onCurrentSegmentFinished(player, tps);
 			// Process next step on the current point
-			onMakingNextStep(player, tps);
+			if(tps.currentPoint < tps.trajectory.points.length)
+				onMakingNextStep(player, tps);
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo processing error: {0}", ex);
 			finishDemo(player);
@@ -152,7 +157,12 @@ public class TrajectoryPlayer
 		});
 		// Message on point reach
 		if(tp1.messageOnReach != null && !"".equals(tp1.messageOnReach))
-			player.sendMessage(GenericChatCodes.processStringStatic(tp1.messageOnReach));
+		{
+			String text = GenericChatCodes.processStringStatic(tp1.messageOnReach);
+			if(tps.usePlaceholders)
+				text = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, text);
+			player.sendMessage(text);
+		}
 		// Time and weather tricks
 		if(tp1.timeReset)
 			player.resetPlayerTime();
@@ -168,15 +178,20 @@ public class TrajectoryPlayer
 		if(tps.protocolLibFound)
 		{
 			// boolean canUseSubtitle = true;
-			String title = tp1.showTitle != null && !"".equals(tp1.showTitle)
+			String title = GenericChatCodes.processStringStatic(tp1.showTitle != null && !"".equals(tp1.showTitle)
 				? tp1.showTitle
-				: null;
-			String subtitle = tp1.showSubtitle != null && !"".equals(tp1.showSubtitle)
+				: "");
+			String subtitle = GenericChatCodes.processStringStatic(tp1.showSubtitle != null && !"".equals(tp1.showSubtitle)
 				? tp1.showSubtitle
-				: null;
+				: "");
+			if(tps.usePlaceholders)
+			{
+				title = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, title);
+				subtitle = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, subtitle);
+			}
 			try
 			{
-				if(title != null || subtitle != null)
+				if(!"".equals(title) || !"".equals(subtitle))
 					sendTitle(player, title, subtitle, 20, tp1.showTitleTicks, 20);
 			} catch(Exception ex) {
 				BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] ProtocolLib error, disabling titles.\n{0}", ex);
@@ -190,40 +205,49 @@ public class TrajectoryPlayer
 			= com.comphenix.protocol.ProtocolLibrary.getProtocolManager();
 		final com.comphenix.protocol.PacketType packetType
 			= com.comphenix.protocol.PacketType.Play.Server.TITLE;
-		// Prepare timings
+		// Send timings
 		final com.comphenix.protocol.events.PacketContainer pTimeTitle
 			= protocolMan.createPacket(packetType);
+		if(stay <= 0)
+			stay = 20;
 		pTimeTitle.getIntegers().
 			write(0, fadeIn).
 			write(1, stay).
 			write(2, fadeOut);
 		pTimeTitle.getTitleActions().write(0,
 			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TIMES);
-		// Prepare title
-		final com.comphenix.protocol.events.PacketContainer pSubTitle
-			= protocolMan.createPacket(packetType);
-		pSubTitle.getChatComponents().write(0,
-			com.comphenix.protocol.wrappers.WrappedChatComponent.fromJson(subtitle));
-		pSubTitle.getTitleActions().write(0,
-			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
-		// Prepare subtitle
-		final com.comphenix.protocol.events.PacketContainer pTitle
-			= protocolMan.createPacket(packetType);
-		pTitle.getChatComponents().write(0,
-			com.comphenix.protocol.wrappers.WrappedChatComponent.fromJson(title));
-		pTitle.getTitleActions().write(0,
-			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
-		// Send packets!
 		protocolMan.sendServerPacket(player, pTimeTitle);
-		protocolMan.sendServerPacket(player, pSubTitle);
-		protocolMan.sendServerPacket(player, pTitle);
+		// Prepare subtitle
+		if(!"".equals(subtitle))
+		{
+			final com.comphenix.protocol.events.PacketContainer pSubTitle
+				= protocolMan.createPacket(packetType);
+			pSubTitle.getChatComponents().write(0,
+				com.comphenix.protocol.wrappers.WrappedChatComponent.fromJson(subtitle));
+			pSubTitle.getTitleActions().write(0,
+				com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
+			// Send
+			protocolMan.sendServerPacket(player, pSubTitle);
+		}
+		// Prepare title
+		if(!"".equals(title))
+		{
+			final com.comphenix.protocol.events.PacketContainer pTitle
+				= protocolMan.createPacket(packetType);
+			pTitle.getChatComponents().write(0,
+				com.comphenix.protocol.wrappers.WrappedChatComponent.fromJson(title));
+			pTitle.getTitleActions().write(0,
+				com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
+			// Send
+			protocolMan.sendServerPacket(player, pTitle);
+		}
 	}
 	private void onMakingNextStep(final Player player, final TrajectoryPlayState tps)
 	{
 		final TrajectoryPoint tp1 = tps.trajectory.points[tps.currentPoint];
 		long currentSegmentTimeSpent = tps.localTick - tps.currentPointStartTick;
 		// Teleport player to the next position
-		if(currentSegmentTimeSpent >= tp1.freezeTicks)
+		if(currentSegmentTimeSpent >= tp1.freezeTicks && (tps.currentPoint + 1) < tps.trajectory.points.length)
 		{
 			currentSegmentTimeSpent -= tp1.freezeTicks;
 			final TrajectoryPoint tp2 = tps.trajectory.points[tps.currentPoint + 1];

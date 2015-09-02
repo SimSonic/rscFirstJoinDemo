@@ -4,19 +4,19 @@ import org.bukkit.Location;
 
 public class TrajectoryPoint extends SightedPoint
 {
-	public float   speedAfter;
-	public String  messageOnReach;
-	public int     freezeTicks;
-	public boolean timeReset;
-	public boolean timeUpdate;
-	public long    timeUpdateValue;
-	public boolean timeUpdateLock;
-	public boolean weatherReset;
-	public boolean weatherUpdate;
-	public boolean weatherUpdateStormy;
-	public String  showTitle;
-	public String  showSubtitle;
-	public int     showTitleTicks;
+	public float   speedAfter          = 1.0f;
+	public String  messageOnReach      = "";
+	public int     freezeTicks         = 0;
+	public boolean timeReset           = false;
+	public boolean timeUpdate          = false;
+	public long    timeUpdateValue     = 0;
+	public boolean timeUpdateLock      = false;
+	public boolean weatherReset        = false;
+	public boolean weatherUpdate       = false;
+	public boolean weatherUpdateStormy = false;
+	public String  showTitle           = "";
+	public String  showSubtitle        = "";
+	public int     showTitleTicks      = 60;
 	public TrajectoryPoint()
 	{
 	}
