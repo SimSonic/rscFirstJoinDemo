@@ -80,16 +80,26 @@ public class BukkitCommands
 						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[1]);
 					}
 					tp.messageOnReach = GenericChatCodes.glue(Arrays.copyOfRange(args, 2, args.length), " ");
-					pointList.add(tp);
-					buffer.points = pointList.toArray(new TrajectoryPoint[pointList.size()]);
-					buffer.setSelected(buffer.points.length - 1);
+					int selected = buffer.getSelected();
+					if(selected < pointList.size() - 1)
+					{
+						pointList.add(selected + 1, tp);
+						buffer.points = pointList.toArray(new TrajectoryPoint[pointList.size()]);
+						buffer.setSelected(selected + 1);
+					} else {
+						pointList.add(tp);
+						buffer.points = pointList.toArray(new TrajectoryPoint[pointList.size()]);
+						buffer.setSelected(buffer.points.length - 1);
+					}
 					throw new CommandAnswerException("Added! Selected point ID is #" + buffer.getSelected() + " (0..." + (buffer.points.length - 1) + ")");
 				}
 				break;
 			case "position":
 				if(checkAdminOnly(sender))
 				{
+					final Player player = checkPlayerOnly(sender);
 					final TrajectoryPoint point = getSelectedPoint(sender);
+					point.updateLocation(player.getLocation());
 					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
 				}
 				break;
@@ -198,7 +208,7 @@ public class BukkitCommands
 					final String  firstJoinCaption = plugin.trajMngr.getFirstJoinCaption();
 					final boolean firstJoinLoaded  = plugin.trajMngr.contains(firstJoinCaption);
 					final ArrayList<String> answer = new ArrayList<>();
-					answer.add("Current configuration:");
+					answer.add("{MAGENTA}Server configuration:");
 					answer.add("firstJoinTrajectory: {_YL}" + firstJoinCaption);
 					answer.add("firstJoinTrajectory is " + (firstJoinLoaded ? "{_DG}already loaded" : "{_DR}not loaded yet"));
 					if(firstJoinLoaded)
@@ -208,8 +218,20 @@ public class BukkitCommands
 						final Trajectory buffer = plugin.buffers.get((Player)sender);
 						if(buffer != null && buffer.points.length > 0)
 						{
+							answer.add("{MAGENTA}Your buffer state:");
 							answer.add("Your have some trajectory points in your buffer: {WHITE}" + buffer.points.length);
 							answer.add("Selected point ID is #" + buffer.getSelected() + " (in range 0..." + (buffer.points.length - 1) + ")");
+							final TrajectoryPoint point = getSelectedPoint(sender);
+							answer.add("{MAGENTA}Selected point info:");
+							answer.add("Position: {RESET}" + point.location.toVector().toString());
+							answer.add("FreezeTime (ticks): {RESET}" + point.freezeTicks);
+							answer.add("SpeedAfter (blocks/sec): {RESET}" + point.speedAfter);
+							answer.add("MessageOnReach: {RESET}" + point.messageOnReach);
+							if(point.showTitle != null)
+								answer.add("Title: {RESET}" + point.showTitle);
+							if(point.showSubtitle != null)
+								answer.add("Subtitle: {RESET}" + point.showSubtitle);
+							answer.add("Title timer (ticks): {RESET}" + point.showTitleTicks);
 						} else
 							answer.add("Your have no trajectory points in your buffer");
 					}
@@ -259,6 +281,7 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd freeze <ticks> {_LS}- update freezeTicks when reach selected point.",
 						"{YELLOW}/rscfjd speed <blocksPerSec> {_LS}- update speed after selected point. Zero means teleport.",
 						"{YELLOW}/rscfjd text [text] {_LS}- update messageOnReach of selected point.",
+						"{YELLOW}/rscfjd titletime <ticks> {_LS}- update showTitleTicks of selected point.",
 						"{YELLOW}/rscfjd title [text] {_LS}- update showTitle of selected point.",
 						"{YELLOW}/rscfjd subtitle [text] {_LS}- update showSubtitle of selected point.",
 						"{YELLOW}/rscfjd clear {_LS}- clears your buffer",

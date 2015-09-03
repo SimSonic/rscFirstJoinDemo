@@ -24,4 +24,9 @@ public class TrajectoryPoint extends SightedPoint
 	{
 		super(location);
 	}
+	public void updateLocation(Location location)
+	{
+		this.updateAngles(location);
+		this.updateCoordinates(location);
+	}
 }

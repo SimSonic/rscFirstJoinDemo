@@ -12,6 +12,10 @@ public class GenericPoint
 	}
 	public GenericPoint(Location location)
 	{
+		updateCoordinates(location);
+	}
+	public final void updateCoordinates(Location location)
+	{
 		this.location = location.clone();
 		this.world = location.getWorld().getName();
 		this.x = location.getX();

@@ -12,6 +12,9 @@ public class SightedPoint extends GenericPoint
 	public SightedPoint(Location location)
 	{
 		super(location);
+	}
+	public final void updateAngles(Location location)
+	{
 		this.pitch = location.getPitch();
 		this.yaw   = location.getYaw();
 	}
