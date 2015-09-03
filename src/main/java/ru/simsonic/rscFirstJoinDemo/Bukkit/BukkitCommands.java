@@ -2,6 +2,7 @@ package ru.simsonic.rscFirstJoinDemo.Bukkit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -87,15 +88,69 @@ public class BukkitCommands
 				}
 				break;
 			case "position":
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
+				}
+				break;
 			case "freeze":
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					try
+					{
+						point.freezeTicks = Integer.parseInt(args[0]);
+					} catch(ArrayIndexOutOfBoundsException | NullPointerException ex) {
+						throw new CommandAnswerException("{_LR}Not enough args.");
+					} catch(NumberFormatException ex) {
+						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
+					}
+					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
+				}
+				break;
 			case "speed":
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					try
+					{
+						point.speedAfter = Float.parseFloat(args[0]);
+					} catch(ArrayIndexOutOfBoundsException | NullPointerException ex) {
+						throw new CommandAnswerException("{_LR}Not enough args.");
+					} catch(NumberFormatException ex) {
+						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[1]);
+					}
+					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
+				}
+				break;
 			case "text":
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					point.messageOnReach = ChatColor.translateAlternateColorCodes('&', GenericChatCodes.glue(args, " "));
+					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
+				}
+				break;
 			case "title":
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					point.showTitle = ChatColor.translateAlternateColorCodes('&', GenericChatCodes.glue(args, " "));
+					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
+				}
+				break;
 			case "subtitle":
-				throw new CommandAnswerException("{_LR}Still not supported.");
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					point.showSubtitle = ChatColor.translateAlternateColorCodes('&', GenericChatCodes.glue(args, " "));
+					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
+				}
+				break;
 			case "draw":
 				throw new CommandAnswerException("{_LR}Still not supported.");
-			case "tp":
+			case "select":
 				if(checkAdminOnly(sender))
 				{
 					final Player player = checkPlayerOnly(sender);
@@ -109,6 +164,7 @@ public class BukkitCommands
 					}
 					if(teleport_id >= 0 && teleport_id < buffer.points.length)
 					{
+						player.setFlying(true);
 						player.teleport(buffer.points[teleport_id].location);
 						throw new CommandAnswerException("Teleported to #" + teleport_id);
 					}
@@ -177,7 +233,13 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd addpoint <freeze ticks> <speed after (bps)> [text w/formatting]",
 						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file",
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer",
-						"{YELLOW}/rscfjd tp <#> {_LS}- teleport on your buffer's point #",
+						"{YELLOW}/rscfjd select <#> {_LS}- select any point to editing and teleport you there.",
+						"{YELLOW}/rscfjd position {_LS}- update selected point with your location.",
+						"{YELLOW}/rscfjd freeze <ticks> {_LS}- update freezeTicks when reach selected point.",
+						"{YELLOW}/rscfjd speed <blocksPerSec> {_LS}- update speed after selected point.",
+						"{YELLOW}/rscfjd text [text] {_LS}- update messageOnReach of selected point.",
+						"{YELLOW}/rscfjd title [text] {_LS}- update showTitle of selected point.",
+						"{YELLOW}/rscfjd subtitle [text] {_LS}- update showSubtitle of selected point.",
 						"{YELLOW}/rscfjd clear {_LS}- clears your buffer",
 						"{YELLOW}/rscfjd reload",
 					});
@@ -206,6 +268,15 @@ public class BukkitCommands
 		if(!(sender instanceof Player))
 			throw new CommandAnswerException("{_LR}This command cannot be run from console.");
 		return (Player)sender;
+	}
+	private TrajectoryPoint getSelectedPoint(CommandSender sender) throws CommandAnswerException
+	{
+		final Player player = checkPlayerOnly(sender);
+		final Trajectory buffer = plugin.buffers.get(player);
+		TrajectoryPoint result = buffer != null ? buffer.getSelectedPoint() : null;
+		if(result == null)
+				throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points!");
+		return result;
 	}
 	/*
 	private void checkConsoleOnly(CommandSender sender) throws CommandAnswerException
