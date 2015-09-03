@@ -32,7 +32,7 @@ public class BukkitListener implements Listener
 	{
 		final Player player = event.getPlayer();
 		// Hide all other demo players
-		for(Player demo : rscfjd.playing.keySet())
+		for(Player demo : rscfjd.playStates.keySet())
 			player.hidePlayer(demo);
 		// Check if we should show the demo for him
 		if(!player.hasPlayedBefore())
@@ -44,23 +44,23 @@ public class BukkitListener implements Listener
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Skipping player {0} due to admin permission.", player.getName());
 				return;
 			}
-			if(rscfjd.lazyFirstJoinTrajectoryLoading())
-				rscfjd.trajectoryPlayer.beginDemo(player, rscfjd.trajectories.get(rscfjd.firstJoinTrajectory));
+			if(rscfjd.trajMngr.lazyFirstJoinTrajectoryLoading())
+				rscfjd.trajectoryPlayer.beginDemo(player, rscfjd.trajMngr.getFirstJoin());
 		}
 	}
 	@EventHandler
 	public void onPlayerChat(AsyncPlayerChatEvent event)
 	{
-		if(rscfjd.playing.containsKey(event.getPlayer()))
+		if(rscfjd.playStates.containsKey(event.getPlayer()))
 			event.setCancelled(true);
 		else
-			event.getRecipients().removeAll(rscfjd.playing.keySet());
+			event.getRecipients().removeAll(rscfjd.playStates.keySet());
 	}
 	@EventHandler
 	public void onPlayerCommand(PlayerCommandPreprocessEvent event)
 	{
 		final Player player = event.getPlayer();
-		if(rscfjd.playing.containsKey(player) && !player.hasPermission("rscfjd.admin"))
+		if(rscfjd.playStates.containsKey(player) && !player.hasPermission("rscfjd.admin"))
 			event.setCancelled(true);
 	}
 	@EventHandler
@@ -88,7 +88,7 @@ public class BukkitListener implements Listener
 			return;
 		}
 		event.setLine(0, signFirstLine);
-		final String flight = event.getLine(1).isEmpty() ? rscfjd.firstJoinTrajectory : event.getLine(1);
+		final String flight = event.getLine(1).isEmpty() ? rscfjd.trajMngr.getFirstJoinCaption() : event.getLine(1);
 		event.setLine(1, GenericChatCodes.processStringStatic(
 			rscfjd.getConfig().getString("settings.signs.note", "{_LG}Start demo")));
 		event.setLine(3, flight);
@@ -106,7 +106,7 @@ public class BukkitListener implements Listener
 		if(!sign.getLine(0).equals(signFirstLine))
 			return;
 		final String trajectoryName = sign.getLine(3);
-		final Trajectory trajectory = rscfjd.loadTrajectory(trajectoryName);
+		final Trajectory trajectory = rscfjd.trajMngr.loadTrajectory(trajectoryName);
 		rscfjd.trajectoryPlayer.beginDemo(event.getPlayer(), trajectory);
 	}
 	@org.bukkit.event.EventHandler
@@ -114,7 +114,7 @@ public class BukkitListener implements Listener
 	{
 		final Entity entity = event.getEntity();
 		if(entity instanceof Player)
-			if(rscfjd.playing.containsKey((Player)entity))
+			if(rscfjd.playStates.containsKey((Player)entity))
 				event.setCancelled(true);
 	}
 }

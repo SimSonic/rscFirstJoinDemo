@@ -55,7 +55,7 @@ public class TrajectoryPlayer
 			player.setPlayerWeather(WeatherType.CLEAR);
 			if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
 				player.setGameMode(GameMode.SPECTATOR);
-			plugin.playing.put(player, tps);
+			plugin.playStates.put(player, tps);
 			tps.playTask = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
 			{
 				@Override
@@ -75,7 +75,7 @@ public class TrajectoryPlayer
 	{
 		try
 		{
-			final TrajectoryPlayState tps = plugin.playing.get(player);
+			final TrajectoryPlayState tps = plugin.playStates.get(player);
 			if(tps != null)
 			{
 				player.setGameMode(tps.gamemode);
@@ -92,7 +92,7 @@ public class TrajectoryPlayer
 					player.teleport(tps.trajectory.points[points - 1].location);
 					player.saveData();
 				}
-				plugin.playing.remove(player);
+				plugin.playStates.remove(player);
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
 			}
 			for(Player online : plugin.getServer().getOnlinePlayers())
@@ -178,12 +178,12 @@ public class TrajectoryPlayer
 		if(tps.protocolLibFound)
 		{
 			// boolean canUseSubtitle = true;
-			String title = GenericChatCodes.processStringStatic(tp1.showTitle != null && !"".equals(tp1.showTitle)
-				? tp1.showTitle
-				: "");
-			String subtitle = GenericChatCodes.processStringStatic(tp1.showSubtitle != null && !"".equals(tp1.showSubtitle)
-				? tp1.showSubtitle
-				: "");
+			String title = tp1.showTitle != null && !"".equals(tp1.showTitle)
+				? GenericChatCodes.processStringStatic(tp1.showTitle)
+				: "";
+			String subtitle = tp1.showSubtitle != null && !"".equals(tp1.showSubtitle)
+				? GenericChatCodes.processStringStatic(tp1.showSubtitle)
+				: "";
 			if(tps.usePlaceholders)
 			{
 				title = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, title);
@@ -223,7 +223,7 @@ public class TrajectoryPlayer
 			final com.comphenix.protocol.events.PacketContainer pSubTitle
 				= protocolMan.createPacket(packetType);
 			pSubTitle.getChatComponents().write(0,
-				com.comphenix.protocol.wrappers.WrappedChatComponent.fromJson(subtitle));
+				com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(subtitle));
 			pSubTitle.getTitleActions().write(0,
 				com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
 			// Send
@@ -235,7 +235,7 @@ public class TrajectoryPlayer
 			final com.comphenix.protocol.events.PacketContainer pTitle
 				= protocolMan.createPacket(packetType);
 			pTitle.getChatComponents().write(0,
-				com.comphenix.protocol.wrappers.WrappedChatComponent.fromJson(title));
+				com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(title));
 			pTitle.getTitleActions().write(0,
 				com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
 			// Send

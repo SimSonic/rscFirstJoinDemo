@@ -3,6 +3,7 @@ package ru.simsonic.rscFirstJoinDemo.Bukkit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
@@ -25,90 +26,43 @@ public class BukkitCommands
 		switch(command)
 		{
 			case "load":
-				if(sender.hasPermission("rscfjd.admin"))
+				if(checkAdminOnly(sender))
 				{
-					if(sender instanceof Player)
-					{
-						final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : Settings.defaultTrajectory;
-						final Trajectory buffer = plugin.loadTrajectory(filename);
-						plugin.setBufferedTrajectory((Player)sender, buffer);
-						throw new CommandAnswerException("Loaded (" + buffer.points.length + " nodes)");
-					}
-					throw new CommandAnswerException("This command cannot be run from console.");
+					final Player player = checkPlayerOnly(sender);
+					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : Settings.defaultTrajectory;
+					final Trajectory buffer = plugin.trajMngr.loadTrajectory(filename);
+					plugin.setBufferedTrajectory(player, buffer);
+					throw new CommandAnswerException("Loaded (" + buffer.points.length + " nodes)");
 				}
 				break;
 			case "save":
-				if(sender.hasPermission("rscfjd.admin"))
+				if(checkAdminOnly(sender))
 				{
-					if(sender instanceof Player)
-					{
-						final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : Settings.defaultTrajectory;
-						plugin.saveTrajectory(plugin.getBufferedTrajectory((Player)sender), filename);
-						throw new CommandAnswerException("Saved {_LC}" + filename + ".json{_LG}.");
-					}
-					throw new CommandAnswerException("This command cannot be run from console.");
+					final Player player = checkPlayerOnly(sender);
+					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : Settings.defaultTrajectory;
+					plugin.trajMngr.saveTrajectory(plugin.getBufferedTrajectory(player), filename);
+					throw new CommandAnswerException("Saved {_LC}" + filename + ".json{_LG}.");
 				}
 				break;
 			case "clear":
-				if(sender.hasPermission("rscfjd.admin"))
+				if(checkAdminOnly(sender))
 				{
-					if(sender instanceof Player)
-					{
-						final Trajectory buffer = new Trajectory();
-						buffer.points = new TrajectoryPoint[] {  };
-						plugin.setBufferedTrajectory((Player)sender, buffer);
-						throw new CommandAnswerException("{_LG}Buffer cleared.");
-					}
-					throw new CommandAnswerException("This command cannot be run from console.");
-				}
-				break;
-			case "play":
-				if(sender.hasPermission("rscfjd.admin"))
-				{
-					Player play_player;
-					if(args[0] != null && !"".equals(args[0]))
-						play_player = plugin.getServer().getPlayer(args[0]);
-					else if(sender instanceof Player)
-						play_player = (Player)sender;
-					else
-						throw new CommandAnswerException("Player-only command.");
-					if(play_player == null)
-						throw new CommandAnswerException("Cannot find such player.");
-					if(plugin.buffers.containsKey(play_player))
-						plugin.trajectoryPlayer.beginDemo(play_player, plugin.buffers.get(play_player));
-					else
-						if(plugin.lazyFirstJoinTrajectoryLoading())
-							plugin.trajectoryPlayer.beginDemo(play_player, plugin.trajectories.get(plugin.firstJoinTrajectory));
-					return;
-				}
-				break;
-			case "stop":
-				if(sender.hasPermission("rscfjd.admin"))
-				{
-					Player stop_player;
-					if(args[0] != null && !"".equals(args[0]))
-						stop_player = plugin.getServer().getPlayer(args[0]);
-					else if(sender instanceof Player)
-						stop_player = (Player)sender;
-					else
-						throw new CommandAnswerException("Player-only command.");
-					if(stop_player == null)
-						throw new CommandAnswerException("Cannot find such player.");
-					plugin.trajectoryPlayer.finishDemo(stop_player);
-					return;
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = new Trajectory();
+					buffer.points = new TrajectoryPoint[] {};
+					plugin.setBufferedTrajectory(player, buffer);
+					throw new CommandAnswerException("{_LG}Buffer cleared.");
 				}
 				break;
 			case "addpoint":
-				if(!(sender instanceof Player))
-					throw new CommandAnswerException("Player-only command.");
-				if(sender.hasPermission("rscfjd.admin"))
+				if(checkAdminOnly(sender))
 				{
-					final Trajectory buffer = plugin.getBufferedTrajectory((Player)sender);
-					final Player me = (Player)sender;
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
 					final ArrayList<TrajectoryPoint> pointList = new ArrayList<>();
 					if(buffer.points != null)
 						pointList.addAll(Arrays.asList(buffer.points));
-					final TrajectoryPoint tp = new TrajectoryPoint(me.getLocation());
+					final TrajectoryPoint tp = new TrajectoryPoint(player.getLocation());
 					try
 					{
 						tp.freezeTicks = Integer.parseInt(args[0]);
@@ -128,16 +82,24 @@ public class BukkitCommands
 					tp.messageOnReach = GenericChatCodes.glue(Arrays.copyOfRange(args, 2, args.length), " ");
 					pointList.add(tp);
 					buffer.points = pointList.toArray(new TrajectoryPoint[pointList.size()]);
-					throw new CommandAnswerException("Done #" + pointList.size());
+					buffer.setSelected(buffer.points.length - 1);
+					throw new CommandAnswerException("Added! Selected point ID is #" + buffer.getSelected() + " (0..." + (buffer.points.length - 1) + ")");
 				}
 				break;
+			case "position":
+			case "freeze":
+			case "speed":
+			case "text":
+			case "title":
+			case "subtitle":
+				throw new CommandAnswerException("{_LR}Still not supported.");
+			case "draw":
+				throw new CommandAnswerException("{_LR}Still not supported.");
 			case "tp":
-				if(!(sender instanceof Player))
-					throw new CommandAnswerException("Player-only command.");
-				if(sender.hasPermission("rscfjd.admin"))
+				if(checkAdminOnly(sender))
 				{
-					final Player me = (Player)sender;
-					final Trajectory buffer = plugin.getBufferedTrajectory(me);
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
 					int teleport_id;
 					try
 					{
@@ -147,32 +109,66 @@ public class BukkitCommands
 					}
 					if(teleport_id >= 0 && teleport_id < buffer.points.length)
 					{
-						me.teleport(buffer.points[teleport_id].location);
+						player.teleport(buffer.points[teleport_id].location);
 						throw new CommandAnswerException("Teleported to #" + teleport_id);
 					}
 					throw new CommandAnswerException("{_LR}Out of range (0..." + (buffer.points.length - 1) + ").");
 				}
 				break;
 			case "info":
-				if(sender.hasPermission("rscfjd.admin"))
+				if(checkAdminOnly(sender))
 				{
+					final String  firstJoinCaption = plugin.trajMngr.getFirstJoinCaption();
+					final boolean firstJoinLoaded  = plugin.trajMngr.contains(firstJoinCaption);
 					final ArrayList<String> answer = new ArrayList<>();
 					answer.add("Current configuration:");
-					answer.add("firstJoinTrajectory: {_YL}" + plugin.firstJoinTrajectory);
-					answer.add("firstJoinTrajectory is " + (plugin.trajectories.containsKey(plugin.firstJoinTrajectory)
-						? "{_DG}already loaded"
-						: "{_DR}not loaded yet"));
-					if(plugin.trajectories.containsKey(plugin.firstJoinTrajectory))
-						answer.add("firstJoinTrajectory contains points: {WHITE}" + plugin.trajectories.get(plugin.firstJoinTrajectory).points.length);
-					if(plugin.buffers.containsKey((Player)sender))
-						answer.add("Your have some trajectory points in your buffer: {WHITE}" + plugin.buffers.get((Player)sender).points.length);
-					else
-						answer.add("Your have no trajectory points in your buffer");
+					answer.add("firstJoinTrajectory: {_YL}" + firstJoinCaption);
+					answer.add("firstJoinTrajectory is " + (firstJoinLoaded ? "{_DG}already loaded" : "{_DR}not loaded yet"));
+					if(firstJoinLoaded)
+						answer.add("firstJoinTrajectory contains points: {WHITE}" + plugin.trajMngr.get(firstJoinCaption).points.length);
+					if(sender instanceof Player)
+					{
+						final Trajectory buffer = plugin.buffers.get((Player)sender);
+						if(buffer != null && buffer.points.length > 0)
+						{
+							answer.add("Your have some trajectory points in your buffer: {WHITE}" + buffer.points.length);
+							answer.add("Selected point ID is #" + buffer.getSelected() + " (in range 0..." + (buffer.points.length - 1) + ")");
+						} else
+							answer.add("Your have no trajectory points in your buffer");
+					}
 					throw new CommandAnswerException(answer);
 				}
 				break;
+			case "play":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = (args[0] != null && !"".equals(args[0]))
+						? plugin.getServer().getPlayer(args[0])
+						: checkPlayerOnly(sender);
+					if(player == null)
+						throw new CommandAnswerException("{_LR}Cannot find such player.");
+					if(plugin.buffers.containsKey(player))
+						plugin.trajectoryPlayer.beginDemo(player, plugin.buffers.get(player));
+					else
+						if(plugin.trajMngr.lazyFirstJoinTrajectoryLoading())
+							plugin.trajectoryPlayer.beginDemo(player, plugin.trajMngr.getFirstJoin());
+					return;
+				}
+				break;
+			case "stop":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = (args[0] != null && !"".equals(args[0]))
+						? plugin.getServer().getPlayer(args[0])
+						: checkPlayerOnly(sender);
+					if(player == null)
+						throw new CommandAnswerException("{_LR}Cannot find such player.");
+					plugin.trajectoryPlayer.finishDemo(player);
+					return;
+				}
+				break;
 			case "help":
-				if(sender.hasPermission("rscfjd.admin"))
+				if(checkAdminOnly(sender))
 					throw new CommandAnswerException(new String[]
 					{
 						"Usage:",
@@ -187,7 +183,7 @@ public class BukkitCommands
 					});
 				break;
 			case "reload":
-				if(sender.hasPermission("rscfjd.admin"))
+				if(checkAdminOnly(sender))
 				{
 					plugin.reloadConfig();
 					plugin.getPluginLoader().disablePlugin(plugin);
@@ -199,4 +195,23 @@ public class BukkitCommands
 		}
 		throw new CommandAnswerException("{_LR}Not enough permissions.");
 	}
+	private boolean checkAdminOnly(CommandSender sender) throws CommandAnswerException
+	{
+		if(!sender.hasPermission("rscfjd.admin"))
+			throw new CommandAnswerException("{_LR}Not enough permissions.");
+		return true;
+	}
+	private Player checkPlayerOnly(CommandSender sender) throws CommandAnswerException
+	{
+		if(!(sender instanceof Player))
+			throw new CommandAnswerException("{_LR}This command cannot be run from console.");
+		return (Player)sender;
+	}
+	/*
+	private void checkConsoleOnly(CommandSender sender) throws CommandAnswerException
+	{
+		if(!(sender instanceof ConsoleCommandSender))
+			throw new CommandAnswerException("{_LR}Console-only command.");
+	}
+	*/
 }
