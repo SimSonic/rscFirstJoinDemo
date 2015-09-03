@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
@@ -55,7 +54,7 @@ public class BukkitCommands
 					throw new CommandAnswerException("{_LG}Buffer cleared.");
 				}
 				break;
-			case "addpoint":
+			case "add":
 				if(checkAdminOnly(sender))
 				{
 					final Player player = checkPlayerOnly(sender);
@@ -132,6 +131,21 @@ public class BukkitCommands
 					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
 				}
 				break;
+			case "titletime":
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					try
+					{
+						point.showTitleTicks = Integer.parseInt(args[0]);
+					} catch(ArrayIndexOutOfBoundsException | NullPointerException ex) {
+						throw new CommandAnswerException("{_LR}Not enough args.");
+					} catch(NumberFormatException ex) {
+						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
+					}
+					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
+				}
+				break;
 			case "title":
 				if(checkAdminOnly(sender))
 				{
@@ -148,29 +162,36 @@ public class BukkitCommands
 					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
 				}
 				break;
-			case "draw":
-				throw new CommandAnswerException("{_LR}Still not supported.");
 			case "select":
 				if(checkAdminOnly(sender))
 				{
 					final Player player = checkPlayerOnly(sender);
 					final Trajectory buffer = plugin.getBufferedTrajectory(player);
-					int teleport_id;
+					int pointID;
 					try
 					{
-						teleport_id = Integer.parseInt(args[0]);
+						pointID = Integer.parseInt(args[0]);
+					} catch(ArrayIndexOutOfBoundsException | NullPointerException ex) {
+						throw new CommandAnswerException("{_LR}Not enough args.");
 					} catch(NumberFormatException ex) {
-						teleport_id = buffer.points.length - 1;
+						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
 					}
-					if(teleport_id >= 0 && teleport_id < buffer.points.length)
+					if(pointID >= 0 && pointID < buffer.points.length)
 					{
+						buffer.setSelected(pointID);
 						player.setFlying(true);
-						player.teleport(buffer.points[teleport_id].location);
-						throw new CommandAnswerException("Teleported to #" + teleport_id);
+						player.teleport(buffer.points[pointID].location);
+						throw new CommandAnswerException("Selected #" + pointID + " and teleported to it");
 					}
 					throw new CommandAnswerException("{_LR}Out of range (0..." + (buffer.points.length - 1) + ").");
 				}
 				break;
+			case "draw":
+				throw new CommandAnswerException("{_LR}Still not supported.");
+			case "time":
+				throw new CommandAnswerException("{_LR}Still not supported.");
+			case "weather":
+				throw new CommandAnswerException("{_LR}Still not supported.");
 			case "info":
 				if(checkAdminOnly(sender))
 				{
@@ -230,13 +251,13 @@ public class BukkitCommands
 						"Usage:",
 						"{YELLOW}/rscfjd play [player name]",
 						"{YELLOW}/rscfjd stop [player name]",
-						"{YELLOW}/rscfjd addpoint <freeze ticks> <speed after (bps)> [text w/formatting]",
+						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting]",
 						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file",
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer",
-						"{YELLOW}/rscfjd select <#> {_LS}- select any point to editing and teleport you there.",
+						"{YELLOW}/rscfjd select <#> {_LS}- select point by id for editing and teleport you there.",
 						"{YELLOW}/rscfjd position {_LS}- update selected point with your location.",
 						"{YELLOW}/rscfjd freeze <ticks> {_LS}- update freezeTicks when reach selected point.",
-						"{YELLOW}/rscfjd speed <blocksPerSec> {_LS}- update speed after selected point.",
+						"{YELLOW}/rscfjd speed <blocksPerSec> {_LS}- update speed after selected point. Zero means teleport.",
 						"{YELLOW}/rscfjd text [text] {_LS}- update messageOnReach of selected point.",
 						"{YELLOW}/rscfjd title [text] {_LS}- update showTitle of selected point.",
 						"{YELLOW}/rscfjd subtitle [text] {_LS}- update showSubtitle of selected point.",
@@ -278,11 +299,4 @@ public class BukkitCommands
 				throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points!");
 		return result;
 	}
-	/*
-	private void checkConsoleOnly(CommandSender sender) throws CommandAnswerException
-	{
-		if(!(sender instanceof ConsoleCommandSender))
-			throw new CommandAnswerException("{_LR}Console-only command.");
-	}
-	*/
 }
