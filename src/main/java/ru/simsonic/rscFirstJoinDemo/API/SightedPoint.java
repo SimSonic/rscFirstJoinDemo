@@ -12,6 +12,7 @@ public class SightedPoint extends GenericPoint
 	public SightedPoint(Location location)
 	{
 		super(location);
+		updateAngles(location);
 	}
 	public final void updateAngles(Location location)
 	{
