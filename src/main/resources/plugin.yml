@@ -1,10 +1,12 @@
-name: ${project.artifactId}
-main: ${project.groupId}.${project.artifactId}.BukkitPluginMain
+name:    ${project.artifactId}
+main:    ${project.groupId}.${project.artifactId}.BukkitPluginMain
 version: ${project.version}
-author: SimSonic
-website: http://www.voxile.ru
+author:  SimSonic
+website: ${project.url}
 soft-depend:
 - ProtocolLib
+- PlaceholderAPI
+- HolographicDisplays
 commands:
   rscfjd:
     description: ${project.artifactId} command hub
