@@ -195,7 +195,13 @@ public class BukkitCommands
 						player.setAllowFlight(true);
 						player.setFlying(true);
 						player.teleport(buffer.points[pointID].location);
-						throw new CommandAnswerException("Selected #" + pointID + " and teleported to it");
+						player.setAllowFlight(true);
+						player.setFlying(true);
+						final ArrayList<String> answer = new ArrayList<>();
+						answer.add("Selected #" + pointID + " and teleported to it.");
+						answer.add("{_DP}Selected point info:");
+						answer.addAll(getPointProps(buffer.getSelectedPoint()));
+						throw new CommandAnswerException(answer);
 					}
 					throw new CommandAnswerException("{_LR}Out of range (0..." + (buffer.points.length - 1) + ").");
 				}
@@ -255,30 +261,22 @@ public class BukkitCommands
 					final String  firstJoinCaption = plugin.trajMngr.getFirstJoinCaption();
 					final boolean firstJoinLoaded  = plugin.trajMngr.contains(firstJoinCaption);
 					final ArrayList<String> answer = new ArrayList<>();
-					answer.add("{MAGENTA}Server configuration:");
-					answer.add("firstJoinTrajectory: {_YL}" + firstJoinCaption);
+					answer.add("{_DP}Server configuration:");
+					answer.add("firstJoinTrajectory: {RESET}" + firstJoinCaption);
 					answer.add("firstJoinTrajectory is " + (firstJoinLoaded ? "{_DG}already loaded" : "{_DR}not loaded yet"));
 					if(firstJoinLoaded)
-						answer.add("firstJoinTrajectory contains points: {WHITE}" + plugin.trajMngr.get(firstJoinCaption).points.length);
+						answer.add("firstJoinTrajectory contains points: {RESET}" + plugin.trajMngr.get(firstJoinCaption).points.length);
 					if(sender instanceof Player)
 					{
 						final Trajectory buffer = plugin.buffers.get((Player)sender);
 						if(buffer != null && buffer.points.length > 0)
 						{
-							answer.add("{MAGENTA}Your buffer state:");
-							answer.add("Your have some trajectory points in your buffer: {WHITE}" + buffer.points.length);
+							answer.add("{_DP}Your buffer state:");
+							answer.add("Your have some trajectory points in your buffer: {RESET}" + buffer.points.length);
 							answer.add("Selected point ID is #" + buffer.getSelected() + " (in range 0..." + (buffer.points.length - 1) + ")");
+							answer.add("{_DP}Selected point info:");
 							final TrajectoryPoint point = getSelectedPoint(sender);
-							answer.add("{MAGENTA}Selected point info:");
-							answer.add("Position: {RESET}[" + point.location.getBlockX() + "; " + point.location.getBlockY() + "; " + point.location.getBlockZ() + "]");
-							answer.add("FreezeTime (ticks): {RESET}" + point.freezeTicks);
-							answer.add("SpeedAfter (blocks/sec): {RESET}" + point.speedAfter);
-							answer.add("MessageOnReach: {RESET}" + point.messageOnReach);
-							if(point.showTitle != null)
-								answer.add("Title: {RESET}" + point.showTitle);
-							if(point.showSubtitle != null)
-								answer.add("Subtitle: {RESET}" + point.showSubtitle);
-							answer.add("Title timer (ticks): {RESET}" + point.showTitleTicks);
+							answer.addAll(getPointProps(point));
 						} else
 							answer.add("Your have no trajectory points in your buffer");
 					}
@@ -393,7 +391,24 @@ public class BukkitCommands
 		final Trajectory buffer = plugin.buffers.get(player);
 		final TrajectoryPoint result = buffer != null ? buffer.getSelectedPoint() : null;
 		if(result == null)
-			throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points!");
+			throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points first!");
+		return result;
+	}
+	private ArrayList<String> getPointProps(TrajectoryPoint point)
+	{
+		final ArrayList<String> result = new ArrayList<>();
+		if(point != null)
+		{
+			result.add("Position: {RESET}[" + point.location.getBlockX() + "; " + point.location.getBlockY() + "; " + point.location.getBlockZ() + "]");
+			result.add("FreezeTime (ticks): {RESET}" + point.freezeTicks);
+			result.add("SpeedAfter (blocks/sec): {RESET}" + point.speedAfter);
+			result.add("MessageOnReach: {RESET}" + point.messageOnReach);
+			if(point.showTitle != null && !"".equals(point.showTitle))
+				result.add("Title: {RESET}" + point.showTitle);
+			if(point.showSubtitle != null && !"".equals(point.showSubtitle))
+				result.add("Subtitle: {RESET}" + point.showSubtitle);
+			result.add("Title timer (ticks): {RESET}" + point.showTitleTicks);
+		}
 		return result;
 	}
 }

@@ -178,7 +178,6 @@ public class TrajectoryPlayer
 		// Title/subtitle on point reach
 		if(tps.protocolLibFound)
 		{
-			// boolean canUseSubtitle = true;
 			String title = tp1.showTitle != null && !"".equals(tp1.showTitle)
 				? GenericChatCodes.processStringStatic(tp1.showTitle)
 				: "";
@@ -218,33 +217,26 @@ public class TrajectoryPlayer
 		pTimeTitle.getTitleActions().write(0,
 			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TIMES);
 		protocolMan.sendServerPacket(player, pTimeTitle);
-		// Prepare subtitle
-		if(!"".equals(subtitle))
-		{
-			final com.comphenix.protocol.events.PacketContainer pSubTitle
-				= protocolMan.createPacket(packetType);
-			pSubTitle.getChatComponents().write(0,
-				com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(subtitle));
-			pSubTitle.getTitleActions().write(0,
-				com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
-			// Send
-			protocolMan.sendServerPacket(player, pSubTitle);
-			// Title should be always!
-			if("".equals(title))
-				title = ChatColor.RESET.toString();
-		}
-		// Prepare title
-		if(!"".equals(title))
-		{
-			final com.comphenix.protocol.events.PacketContainer pTitle
-				= protocolMan.createPacket(packetType);
-			pTitle.getChatComponents().write(0,
-				com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(title));
-			pTitle.getTitleActions().write(0,
-				com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
-			// Send
-			protocolMan.sendServerPacket(player, pTitle);
-		}
+		// Prepare and send subtitle
+		if("".equals(subtitle))
+			subtitle = ChatColor.RESET.toString();
+		final com.comphenix.protocol.events.PacketContainer pSubTitle
+			= protocolMan.createPacket(packetType);
+		pSubTitle.getChatComponents().write(0,
+			com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(subtitle));
+		pSubTitle.getTitleActions().write(0,
+			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
+		protocolMan.sendServerPacket(player, pSubTitle);
+		// Prepare and send title
+		if("".equals(title))
+			title = ChatColor.RESET.toString();
+		final com.comphenix.protocol.events.PacketContainer pTitle
+			= protocolMan.createPacket(packetType);
+		pTitle.getChatComponents().write(0,
+			com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(title));
+		pTitle.getTitleActions().write(0,
+			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
+		protocolMan.sendServerPacket(player, pTitle);
 	}
 	private void onMakingNextStep(final Player player, final TrajectoryPlayState tps)
 	{
