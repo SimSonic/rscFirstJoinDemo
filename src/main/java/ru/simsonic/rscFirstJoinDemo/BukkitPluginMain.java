@@ -1,5 +1,6 @@
 package ru.simsonic.rscFirstJoinDemo;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,7 +50,8 @@ public final class BukkitPluginMain extends JavaPlugin
 	@Override
 	public void onEnable()
 	{
-		// Read settings 
+		new File(getDataFolder(), "buffers").mkdirs();
+		// Read settings
 		reloadConfig();
 		final String firstJoinTrajectory = getConfig().getString("settings.trajectory", Settings.defaultTrajectory);
 		getConfig().set("settings.trajectory", firstJoinTrajectory);

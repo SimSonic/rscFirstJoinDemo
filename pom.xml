@@ -4,7 +4,7 @@
 
 	<groupId>ru.simsonic</groupId>
 	<artifactId>rscFirstJoinDemo</artifactId>
-	<version>0.6.3b</version>
+	<version>0.6.4b</version>
 	<packaging>jar</packaging>
 
 	<name>rscFirstJoinDemo</name>

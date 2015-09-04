@@ -1,5 +1,6 @@
 package ru.simsonic.rscFirstJoinDemo.Bukkit;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.bukkit.ChatColor;
@@ -32,7 +33,14 @@ public class BukkitCommands
 				if(checkAdminOnly(sender))
 				{
 					final Player player = checkPlayerOnly(sender);
-					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : Settings.defaultTrajectory;
+					String bufferFile = "buffers" + File.pathSeparator + player.getName();
+					try
+					{
+						bufferFile = "buffers" + File.pathSeparator + player.getUniqueId().toString();
+					} catch(RuntimeException ex) {
+						// Pre-1.7 servers
+					}
+					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : bufferFile;
 					final Trajectory buffer = plugin.trajMngr.loadTrajectory(filename);
 					plugin.setBufferedTrajectory(player, buffer);
 					throw new CommandAnswerException("Loaded (" + buffer.points.length + " nodes)");
@@ -42,7 +50,14 @@ public class BukkitCommands
 				if(checkAdminOnly(sender))
 				{
 					final Player player = checkPlayerOnly(sender);
-					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : Settings.defaultTrajectory;
+					String bufferFile = "buffers" + File.pathSeparator + player.getName();
+					try
+					{
+						bufferFile = "buffers" + File.pathSeparator + player.getUniqueId().toString();
+					} catch(RuntimeException ex) {
+						// Pre-1.7 servers
+					}
+					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : bufferFile;
 					plugin.trajMngr.saveTrajectory(plugin.getBufferedTrajectory(player), filename);
 					throw new CommandAnswerException("Saved {_LC}" + filename + ".json{_LG}.");
 				}
@@ -190,9 +205,11 @@ public class BukkitCommands
 						if(args[0] != null)
 							throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
 					}
-					setSelectedPoint(player, buffer, pointID);
 					if(pointID >= 0 && pointID < buffer.points.length)
+					{
+						setSelectedPoint(player, buffer, pointID);
 						buffer.setSelected(pointID);
+					}
 					throw new CommandAnswerException("{_LR}Out of range (0..." + (buffer.points.length - 1) + ").");
 				}
 				break;
