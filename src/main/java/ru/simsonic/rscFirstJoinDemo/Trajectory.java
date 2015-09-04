@@ -1,13 +1,13 @@
 package ru.simsonic.rscFirstJoinDemo;
 
-import ru.simsonic.rscFirstJoinDemo.API.GenericPoint;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 
-public class Trajectory<T extends GenericPoint>
+public class Trajectory
 {
 	public TrajectoryPoint[] points = new TrajectoryPoint[] {};
 	public transient String  caption;
 	public transient int     selected;
+	public transient boolean drawSketch;
 	public Trajectory()
 	{
 	}

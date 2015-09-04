@@ -153,7 +153,7 @@ public class TrajectoryPlayer
 		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached {1} #{2}", new Object[]
 		{
 			player.getName(),
-			tps.trajectory.caption,
+			tps.trajectory.caption != null ? tps.trajectory.caption : "his buffer",
 			tps.currentPoint,
 		});
 		// Message on point reach

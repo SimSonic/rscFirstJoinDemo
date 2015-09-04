@@ -196,8 +196,51 @@ public class BukkitCommands
 					throw new CommandAnswerException("{_LR}Out of range (0..." + (buffer.points.length - 1) + ").");
 				}
 				break;
-			case "draw":
-				throw new CommandAnswerException("{_LR}Still not supported.");
+			case "delete":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					final int selected = buffer.getSelected();
+					final int before = selected;
+					final int after = buffer.points.length - selected - 1;
+					final ArrayList<TrajectoryPoint> newPoints = new ArrayList<>();
+					if(before > 0)
+						newPoints.addAll(Arrays.asList(Arrays.copyOfRange(buffer.points, 0, selected)));
+					if(after > 0)
+						newPoints.addAll(Arrays.asList(Arrays.copyOfRange(buffer.points, selected + 1, buffer.points.length)));
+					buffer.points = newPoints.toArray(new TrajectoryPoint[newPoints.size()]);
+					buffer.setSelected(after == 0 ? selected - 1 : selected);
+					throw new CommandAnswerException(new String[]
+					{
+						"{_LG}Point #" + selected + " has been deleted.",
+						buffer.points.length > 0
+							? "Now you have " + buffer.points.length + " points in your buffer."
+							: "Your buffer is empty now.",
+						buffer.points.length > 0
+							? "New selected point ID is #" + buffer.getSelected() + " (in range 0..." + (buffer.points.length - 1) + ")"
+							: null,
+					});
+				}
+				break;
+			case "merge":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
+					if(args[0] != null && !"".equals(args[0]))
+					{
+						final Trajectory merged = plugin.trajMngr.loadTrajectory(args[0]);
+						final ArrayList<TrajectoryPoint> newPoints = new ArrayList<>();
+						newPoints.addAll(Arrays.asList(buffer.points));
+						newPoints.addAll(Arrays.asList(merged.points));
+						buffer.points = newPoints.toArray(new TrajectoryPoint[newPoints.size()]);
+						throw new CommandAnswerException("{_LG}Complete! Length of your buffer now is " + buffer.points.length + " points.");
+					}
+					throw new CommandAnswerException("{_LR}Require merging trajectory caption.");
+				}
+				break;
 			case "time":
 				throw new CommandAnswerException("{_LR}Still not supported.");
 			case "weather":
@@ -223,7 +266,7 @@ public class BukkitCommands
 							answer.add("Selected point ID is #" + buffer.getSelected() + " (in range 0..." + (buffer.points.length - 1) + ")");
 							final TrajectoryPoint point = getSelectedPoint(sender);
 							answer.add("{MAGENTA}Selected point info:");
-							answer.add("Position: {RESET}" + point.location.toVector().toString());
+							answer.add("Position: {RESET}[" + point.location.getBlockX() + "; " + point.location.getBlockY() + "; " + point.location.getBlockZ() + "]");
 							answer.add("FreezeTime (ticks): {RESET}" + point.freezeTicks);
 							answer.add("SpeedAfter (blocks/sec): {RESET}" + point.speedAfter);
 							answer.add("MessageOnReach: {RESET}" + point.messageOnReach);
@@ -247,11 +290,16 @@ public class BukkitCommands
 					if(player == null)
 						throw new CommandAnswerException("{_LR}Cannot find such player.");
 					if(plugin.buffers.containsKey(player))
+					{
 						plugin.trajectoryPlayer.beginDemo(player, plugin.buffers.get(player));
-					else
+						throw new CommandAnswerException("{_LG}Done (using player buffer).");
+					} else
 						if(plugin.trajMngr.lazyFirstJoinTrajectoryLoading())
+						{
 							plugin.trajectoryPlayer.beginDemo(player, plugin.trajMngr.getFirstJoin());
-					return;
+							throw new CommandAnswerException("{_LG}Done (using first-join trajectory).");
+						}
+					throw new CommandAnswerException("{_LR}There is nothing in demo to play.");
 				}
 				break;
 			case "stop":
@@ -266,14 +314,31 @@ public class BukkitCommands
 					return;
 				}
 				break;
+			case "draw":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
+					if(buffer.drawSketch)
+					{
+						buffer.drawSketch = false;
+						// Disable sketch drawing -- TO DO HERE
+						throw new CommandAnswerException("{_LR}Still not supported.");
+					} else {
+						buffer.drawSketch = true;
+						// Enable sketch drawing -- TO DO HERE
+						throw new CommandAnswerException("{_LR}Still not supported.");
+					}
+				}
+				break;
 			case "help":
 				if(checkAdminOnly(sender))
 					throw new CommandAnswerException(new String[]
 					{
 						"Usage:",
-						"{YELLOW}/rscfjd play [player name]",
-						"{YELLOW}/rscfjd stop [player name]",
-						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting]",
+						"{YELLOW}/rscfjd play [player name] -- start buffer (or first-join demo) for player",
+						"{YELLOW}/rscfjd stop [player name] -- cancel any demo playing for you or other player",
+						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting] - add new point after current and select it",
 						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file",
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer",
 						"{YELLOW}/rscfjd select <#> {_LS}- select point by id for editing and teleport you there.",
@@ -284,6 +349,9 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd titletime <ticks> {_LS}- update showTitleTicks of selected point.",
 						"{YELLOW}/rscfjd title [text] {_LS}- update showTitle of selected point.",
 						"{YELLOW}/rscfjd subtitle [text] {_LS}- update showSubtitle of selected point.",
+						"{YELLOW}/rscfjd merge <caption>{_LS}- add another trajectory to the end of your buffer.",
+						"{YELLOW}/rscfjd delete {_LS}- remove selected point.",
+						// "{YELLOW}/rscfjd draw {_LS}- toggle showing of buffered trajectory as a 3D line.",
 						"{YELLOW}/rscfjd clear {_LS}- clears your buffer",
 						"{YELLOW}/rscfjd reload",
 					});
@@ -298,6 +366,8 @@ public class BukkitCommands
 					return;
 				}
 				break;
+			default:
+				throw new CommandAnswerException("{_LR}Unknown subcommand.");
 		}
 		throw new CommandAnswerException("{_LR}Not enough permissions.");
 	}
@@ -317,9 +387,9 @@ public class BukkitCommands
 	{
 		final Player player = checkPlayerOnly(sender);
 		final Trajectory buffer = plugin.buffers.get(player);
-		TrajectoryPoint result = buffer != null ? buffer.getSelectedPoint() : null;
+		final TrajectoryPoint result = buffer != null ? buffer.getSelectedPoint() : null;
 		if(result == null)
-				throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points!");
+			throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points!");
 		return result;
 	}
 }
