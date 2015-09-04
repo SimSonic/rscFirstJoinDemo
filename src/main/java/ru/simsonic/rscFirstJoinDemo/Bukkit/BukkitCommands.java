@@ -11,6 +11,7 @@ import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
 import ru.simsonic.rscFirstJoinDemo.Trajectory;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
+import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
 
 public class BukkitCommands
 {
@@ -21,6 +22,8 @@ public class BukkitCommands
 	}
 	public void execute(CommandSender sender, String[] args) throws CommandAnswerException
 	{
+		if(args.length == 0)
+			throw new CommandAnswerException(Tools.getPluginWelcome(plugin, null));
 		final String command = args[0].toLowerCase();
 		args = Arrays.copyOfRange(args, 1, (args.length >= 4) ? args.length : 4);
 		switch(command)

@@ -7,7 +7,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitCommands;
@@ -79,15 +78,6 @@ public final class BukkitPluginMain extends JavaPlugin
 	{
 		try
 		{
-			if(args.length == 0)
-			{
-				final PluginDescriptionFile desc = this.getDescription();
-				throw new CommandAnswerException(new String[]
-				{
-					"{_LP}" + desc.getName() + " {_LS}" + desc.getVersion() + "{_LP} © " + desc.getAuthors().get(0),
-					"{_LP}Website: {GOLD}" + desc.getWebsite(),
-				});
-			}
 			switch(command.getName().toLowerCase())
 			{
 				case "rscfjd":
@@ -97,8 +87,7 @@ public final class BukkitPluginMain extends JavaPlugin
 			return false;
 		} catch(CommandAnswerException ex) {
 			for(String answer : ex.getMessageArray())
-				if(answer != null)
-					sender.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + answer));
+				sender.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + answer));
 		}
 		return true;
 	}
