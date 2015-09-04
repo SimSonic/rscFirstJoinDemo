@@ -192,6 +192,7 @@ public class BukkitCommands
 					if(pointID >= 0 && pointID < buffer.points.length)
 					{
 						buffer.setSelected(pointID);
+						player.setAllowFlight(true);
 						player.setFlying(true);
 						player.teleport(buffer.points[pointID].location);
 						throw new CommandAnswerException("Selected #" + pointID + " and teleported to it");
