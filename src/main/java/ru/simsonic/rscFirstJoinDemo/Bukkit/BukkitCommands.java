@@ -180,30 +180,48 @@ public class BukkitCommands
 				{
 					final Player player = checkPlayerOnly(sender);
 					final Trajectory buffer = plugin.getBufferedTrajectory(player);
-					int pointID;
+					int pointID = buffer.getSelected();
 					try
 					{
 						pointID = Integer.parseInt(args[0]);
 					} catch(ArrayIndexOutOfBoundsException | NullPointerException ex) {
 						throw new CommandAnswerException("{_LR}Not enough args.");
 					} catch(NumberFormatException ex) {
-						throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
+						if(args[0] != null)
+							throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
 					}
+					setSelectedPoint(player, buffer, pointID);
 					if(pointID >= 0 && pointID < buffer.points.length)
-					{
 						buffer.setSelected(pointID);
-						player.setAllowFlight(true);
-						player.setFlying(true);
-						player.teleport(buffer.points[pointID].location);
-						player.setAllowFlight(true);
-						player.setFlying(true);
-						final ArrayList<String> answer = new ArrayList<>();
-						answer.add("Selected #" + pointID + " and teleported to it.");
-						answer.add("{_DP}Selected point info:");
-						answer.addAll(getPointProps(buffer.getSelectedPoint()));
-						throw new CommandAnswerException(answer);
-					}
 					throw new CommandAnswerException("{_LR}Out of range (0..." + (buffer.points.length - 1) + ").");
+				}
+				break;
+			case "next":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
+					if(buffer.points.length == 0)
+						throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points first!");
+					int pointID = buffer.getSelected() + 1;
+					if(pointID == buffer.points.length)
+						throw new CommandAnswerException("{_LR}This is the last point in your buffer!");
+					setSelectedPoint(player, buffer, pointID);
+					throw new CommandAnswerException("{_LR}{_B}Internal error.");
+				}
+				break;
+			case "prev":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
+					if(buffer.points.length == 0)
+						throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points first!");
+					int pointID = buffer.getSelected();
+					if(pointID == 0)
+						throw new CommandAnswerException("{_LR}This is the first point in your buffer!");
+					setSelectedPoint(player, buffer, pointID - 1);
+					throw new CommandAnswerException("{_LR}{_B}Internal error.");
 				}
 				break;
 			case "delete":
@@ -343,7 +361,9 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting] {_LS}- add new point after current and select it",
 						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file",
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer",
-						"{YELLOW}/rscfjd select <#> {_LS}- select point by id for editing and teleport you there.",
+						"{YELLOW}/rscfjd select [#] {_LS}- [re]select point by id for editing and teleport you there.",
+						"{YELLOW}/rscfjd next {_LS}- select next point in your buffer.",
+						"{YELLOW}/rscfjd prev {_LS}- select previous point in your buffer.",
 						"{YELLOW}/rscfjd position {_LS}- update selected point with your location.",
 						"{YELLOW}/rscfjd freeze <ticks> {_LS}- update freezeTicks when reach selected point.",
 						"{YELLOW}/rscfjd speed <blocksPerSec> {_LS}- update speed after selected point. Zero means teleport.",
@@ -384,6 +404,20 @@ public class BukkitCommands
 		if(!(sender instanceof Player))
 			throw new CommandAnswerException("{_LR}This command cannot be run from console.");
 		return (Player)sender;
+	}
+	private void setSelectedPoint(Player player, Trajectory buffer, int pointID) throws CommandAnswerException
+	{
+		buffer.setSelected(pointID);
+		player.setAllowFlight(true);
+		player.setFlying(true);
+		player.teleport(buffer.points[pointID].location);
+		player.setAllowFlight(true);
+		player.setFlying(true);
+		final ArrayList<String> answer = new ArrayList<>();
+		answer.add("Selected #" + pointID + " and teleported to it.");
+		answer.add("{_DP}Selected point info:");
+		answer.addAll(getPointProps(buffer.getSelectedPoint()));
+		throw new CommandAnswerException(answer);
 	}
 	private TrajectoryPoint getSelectedPoint(CommandSender sender) throws CommandAnswerException
 	{
