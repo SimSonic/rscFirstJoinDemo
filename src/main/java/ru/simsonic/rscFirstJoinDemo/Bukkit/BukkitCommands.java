@@ -304,22 +304,28 @@ public class BukkitCommands
 			case "play":
 				if(checkAdminOnly(sender))
 				{
-					final Player player = (args[0] != null && !"".equals(args[0]))
+					Trajectory demo = null;
+					if(sender instanceof Player)
+					{
+						final Player player = (Player)sender;
+						if(plugin.buffers.containsKey(player))
+							demo = plugin.buffers.get(player);
+					}
+					final Player target = (args[0] != null && !"".equals(args[0]))
 						? plugin.getServer().getPlayer(args[0])
 						: checkPlayerOnly(sender);
-					if(player == null)
+					if(target == null)
 						throw new CommandAnswerException("{_LR}Cannot find such player.");
-					if(plugin.buffers.containsKey(player))
+					if(demo == null)
+						demo = plugin.trajMngr.lazyFirstJoinTrajectoryLoading();
+					if(demo != null)
 					{
-						plugin.trajectoryPlayer.beginDemo(player, plugin.buffers.get(player));
-						throw new CommandAnswerException("{_LG}Done (using player buffer).");
-					} else
-						if(plugin.trajMngr.lazyFirstJoinTrajectoryLoading())
-						{
-							plugin.trajectoryPlayer.beginDemo(player, plugin.trajMngr.getFirstJoin());
-							throw new CommandAnswerException("{_LG}Done (using first-join trajectory).");
-						}
-					throw new CommandAnswerException("{_LR}There is nothing in demo to play.");
+						plugin.trajectoryPlayer.beginDemo(target, demo);
+						throw new CommandAnswerException("{_LG}Demo "
+							+ (demo.caption != null && !"".equals(demo.caption) ? "'" + demo.caption + "'" : "[memory buffer]")
+							+ " has been started.");
+					}
+					throw new CommandAnswerException("{_LR}{_B}Internal error.");
 				}
 				break;
 			case "stop":

@@ -38,12 +38,12 @@ public class TrajectoryMngr
 				new Object[] { caption, ex });
 		}
 	}
-	public boolean lazyFirstJoinTrajectoryLoading()
+	public Trajectory lazyFirstJoinTrajectoryLoading()
 	{
 		// Lazy trajectory loading
 		if(trajectories.containsKey(firstJoinTrajectory) == false)
 			loadTrajectory(firstJoinTrajectory);
-		return trajectories.containsKey(firstJoinTrajectory);
+		return trajectories.get(firstJoinTrajectory);
 	}
 	public Trajectory loadTrajectory(String caption)
 	{
@@ -78,10 +78,6 @@ public class TrajectoryMngr
 	public String getFirstJoinCaption()
 	{
 		return firstJoinTrajectory;
-	}
-	public Trajectory getFirstJoin()
-	{
-		return trajectories.get(firstJoinTrajectory);
 	}
 	public boolean contains(String caption)
 	{

@@ -44,8 +44,9 @@ public class BukkitListener implements Listener
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Skipping player {0} due to admin permission.", player.getName());
 				return;
 			}
-			if(rscfjd.trajMngr.lazyFirstJoinTrajectoryLoading())
-				rscfjd.trajectoryPlayer.beginDemo(player, rscfjd.trajMngr.getFirstJoin());
+			final Trajectory demo = rscfjd.trajMngr.lazyFirstJoinTrajectoryLoading();
+			if(demo != null)
+				rscfjd.trajectoryPlayer.beginDemo(player, demo);
 		}
 	}
 	@EventHandler
