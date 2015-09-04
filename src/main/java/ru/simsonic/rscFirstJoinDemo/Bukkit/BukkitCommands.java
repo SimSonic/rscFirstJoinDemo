@@ -6,7 +6,6 @@ import java.util.Arrays;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
 import ru.simsonic.rscFirstJoinDemo.Trajectory;
@@ -43,7 +42,13 @@ public class BukkitCommands
 					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : bufferFile;
 					final Trajectory buffer = plugin.trajMngr.loadTrajectory(filename);
 					plugin.setBufferedTrajectory(player, buffer);
-					throw new CommandAnswerException("Loaded (" + buffer.points.length + " nodes)");
+					if(buffer.points.length > 0)
+					{
+						final ArrayList<String> answer = setSelectedPoint(player, buffer, buffer.points.length - 1);
+						answer.add(0, "Loaded trajectory: {RESET}" + buffer.points.length + " points.");
+						throw new CommandAnswerException(answer);
+					}
+					throw new CommandAnswerException("Loaded empty trajectory (0 points)");
 				}
 				break;
 			case "save":
@@ -428,7 +433,7 @@ public class BukkitCommands
 			throw new CommandAnswerException("{_LR}This command cannot be run from console.");
 		return (Player)sender;
 	}
-	private void setSelectedPoint(Player player, Trajectory buffer, int pointID) throws CommandAnswerException
+	private ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID) throws CommandAnswerException
 	{
 		buffer.setSelected(pointID);
 		player.setAllowFlight(true);
@@ -436,11 +441,11 @@ public class BukkitCommands
 		player.teleport(buffer.points[pointID].location);
 		player.setAllowFlight(true);
 		player.setFlying(true);
-		final ArrayList<String> answer = new ArrayList<>();
-		answer.add("Selected #" + pointID + " and teleported to it.");
-		answer.add("{_DP}Selected point info:");
-		answer.addAll(getPointProps(buffer.getSelectedPoint()));
-		throw new CommandAnswerException(answer);
+		final ArrayList<String> result = new ArrayList<>();
+		result.add("Selected #" + pointID + " and teleported to it.");
+		result.add("{_DP}Selected point info:");
+		result.addAll(getPointProps(buffer.getSelectedPoint()));
+		return result;
 	}
 	private TrajectoryPoint getSelectedPoint(CommandSender sender) throws CommandAnswerException
 	{
