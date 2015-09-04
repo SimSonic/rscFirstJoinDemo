@@ -339,9 +339,9 @@ public class BukkitCommands
 					throw new CommandAnswerException(new String[]
 					{
 						"Usage:",
-						"{YELLOW}/rscfjd play [player name] -- start buffer (or first-join demo) for player",
-						"{YELLOW}/rscfjd stop [player name] -- cancel any demo playing for you or other player",
-						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting] - add new point after current and select it",
+						"{YELLOW}/rscfjd play [player name] {_LS}- start buffer (or first-join demo) for player",
+						"{YELLOW}/rscfjd stop [player name] {_LS}- cancel any demo playing for you or other player",
+						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting] {_LS}- add new point after current and select it",
 						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file",
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer",
 						"{YELLOW}/rscfjd select <#> {_LS}- select point by id for editing and teleport you there.",
