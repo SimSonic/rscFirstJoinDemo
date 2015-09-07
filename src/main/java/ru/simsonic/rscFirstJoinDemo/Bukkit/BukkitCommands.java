@@ -32,15 +32,16 @@ public class BukkitCommands
 				if(checkAdminOnly(sender))
 				{
 					final Player player = checkPlayerOnly(sender);
-					String bufferFile = "buffers" + File.pathSeparator + player.getName();
+					String bufferFile = player.getName();
 					try
 					{
-						bufferFile = "buffers" + File.pathSeparator + player.getUniqueId().toString();
+						bufferFile = player.getUniqueId().toString();
 					} catch(RuntimeException ex) {
 						// Pre-1.7 servers
 					}
-					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : bufferFile;
-					final Trajectory buffer = plugin.trajMngr.loadTrajectory(filename);
+					final Trajectory buffer = (args[0] != null && !"".equals(args[0]))
+						? plugin.trajMngr.loadTrajectory(args[0])
+						: plugin.trajMngr.loadBufferTrajectory(bufferFile);
 					plugin.setBufferedTrajectory(player, buffer);
 					if(buffer.points.length > 0)
 					{
@@ -55,16 +56,21 @@ public class BukkitCommands
 				if(checkAdminOnly(sender))
 				{
 					final Player player = checkPlayerOnly(sender);
-					String bufferFile = "buffers" + File.pathSeparator + player.getName();
+					final Trajectory trajectory = plugin.getBufferedTrajectory(player);
+					if(args[0] != null && !"".equals(args[0]))
+					{
+						plugin.trajMngr.saveTrajectory(trajectory, args[0]);
+						throw new CommandAnswerException("Saved {_LC}" + args[0] + ".json{_LG}.");
+					}
+					String bufferFile = player.getName();
 					try
 					{
-						bufferFile = "buffers" + File.pathSeparator + player.getUniqueId().toString();
+						bufferFile = player.getUniqueId().toString();
 					} catch(RuntimeException ex) {
 						// Pre-1.7 servers
 					}
-					final String filename = (args[0] != null && !"".equals(args[0])) ? args[0] : bufferFile;
-					plugin.trajMngr.saveTrajectory(plugin.getBufferedTrajectory(player), filename);
-					throw new CommandAnswerException("Saved {_LC}" + filename + ".json{_LG}.");
+					plugin.trajMngr.saveBufferTrajectory(trajectory, bufferFile);
+					throw new CommandAnswerException("Buffer successfully saved.");
 				}
 				break;
 			case "clear":
