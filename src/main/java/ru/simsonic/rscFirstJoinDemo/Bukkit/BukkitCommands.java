@@ -298,9 +298,46 @@ public class BukkitCommands
 				}
 				break;
 			case "time":
-				throw new CommandAnswerException("{_LR}Still not supported.");
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					throw new CommandAnswerException("{_LR}Still not supported.");
+					/*
+					point.showTitle = ChatColor.translateAlternateColorCodes('&', GenericChatCodes.glue(args, " "));
+					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
+					*/
+				}
+				break;
 			case "weather":
-				throw new CommandAnswerException("{_LR}Still not supported.");
+				if(checkAdminOnly(sender))
+				{
+					final TrajectoryPoint point = getSelectedPoint(sender);
+					if(args[0] != null && !"".equals(args[0]))
+					{
+						switch(args[0].toLowerCase())
+						{
+							case "reset":
+								point.weatherReset  = true;
+								point.weatherUpdate = false;
+								break;
+							case "sunny":
+								point.weatherReset        = false;
+								point.weatherUpdate       = true;
+								point.weatherUpdateStormy = false;
+								break;
+							case "stormy":
+								point.weatherReset        = false;
+								point.weatherUpdate       = true;
+								point.weatherUpdateStormy = true;
+								break;
+							default:
+								throw new CommandAnswerException("{_LR}Wrong command. Read help, please.");
+						}
+						throw new CommandAnswerException("{_LG}Done.");
+					}
+					throw new CommandAnswerException("{_LR}Wrong command. Read help, please.");
+				}
+				break;
 			case "info":
 				if(checkAdminOnly(sender))
 				{
@@ -405,6 +442,8 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd titletime <ticks> {_LS}- update showTitleTicks of selected point.",
 						"{YELLOW}/rscfjd title [text] {_LS}- update showTitle of selected point.",
 						"{YELLOW}/rscfjd subtitle [text] {_LS}- update showSubtitle of selected point.",
+						// "{YELLOW}/rscfjd time <reset|lock [value]|unlock [value]|<value>>{_LS}- edit time.",
+						"{YELLOW}/rscfjd weather <reset|sunny|stormy>- edit weather.",
 						"{YELLOW}/rscfjd merge <caption>{_LS}- add another trajectory to the end of your buffer.",
 						"{YELLOW}/rscfjd delete {_LS}- remove selected point.",
 						// "{YELLOW}/rscfjd draw {_LS}- toggle showing of buffered trajectory as a 3D line.",
