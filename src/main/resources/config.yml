@@ -1,7 +1,4 @@
 settings:
   trajectory: trajectory
-  turn-into-spectator: true
-  signs:
-    note: '{GOLD}Полёт по демо!'
 internal:
   version: 1

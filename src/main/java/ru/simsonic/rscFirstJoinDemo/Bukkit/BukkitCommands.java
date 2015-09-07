@@ -1,6 +1,5 @@
 package ru.simsonic.rscFirstJoinDemo.Bukkit;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.bukkit.ChatColor;
@@ -32,16 +31,9 @@ public class BukkitCommands
 				if(checkAdminOnly(sender))
 				{
 					final Player player = checkPlayerOnly(sender);
-					String bufferFile = player.getName();
-					try
-					{
-						bufferFile = player.getUniqueId().toString();
-					} catch(RuntimeException ex) {
-						// Pre-1.7 servers
-					}
 					final Trajectory buffer = (args[0] != null && !"".equals(args[0]))
 						? plugin.trajMngr.loadTrajectory(args[0])
-						: plugin.trajMngr.loadBufferTrajectory(bufferFile);
+						: plugin.trajMngr.loadBufferTrajectory(player);
 					plugin.setBufferedTrajectory(player, buffer);
 					if(buffer.points.length > 0)
 					{
@@ -62,14 +54,7 @@ public class BukkitCommands
 						plugin.trajMngr.saveTrajectory(trajectory, args[0]);
 						throw new CommandAnswerException("Saved {_LC}" + args[0] + ".json{_LG}.");
 					}
-					String bufferFile = player.getName();
-					try
-					{
-						bufferFile = player.getUniqueId().toString();
-					} catch(RuntimeException ex) {
-						// Pre-1.7 servers
-					}
-					plugin.trajMngr.saveBufferTrajectory(trajectory, bufferFile);
+					plugin.trajMngr.saveBufferTrajectory(trajectory, player);
 					throw new CommandAnswerException("Buffer successfully saved.");
 				}
 				break;
@@ -427,11 +412,11 @@ public class BukkitCommands
 					throw new CommandAnswerException(new String[]
 					{
 						"Usage:",
-						"{YELLOW}/rscfjd play [player name] {_LS}- start buffer (or first-join demo) for player",
-						"{YELLOW}/rscfjd stop [player name] {_LS}- cancel any demo playing for you or other player",
-						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting] {_LS}- add new point after current and select it",
-						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file",
-						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer",
+						"{YELLOW}/rscfjd play [player name] {_LS}- start your buffer (or first-join demo) for player.",
+						"{YELLOW}/rscfjd stop [player name] {_LS}- cancel any demo playing for you or other player.",
+						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting] {_LS}- add new point after current and select it.",
+						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file.",
+						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer.",
 						"{YELLOW}/rscfjd select [#] {_LS}- [re]select point by id for editing and teleport you there.",
 						"{YELLOW}/rscfjd next {_LS}- select next point in your buffer.",
 						"{YELLOW}/rscfjd prev {_LS}- select previous point in your buffer.",
@@ -447,8 +432,9 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd merge <caption>{_LS}- add another trajectory to the end of your buffer.",
 						"{YELLOW}/rscfjd delete {_LS}- remove selected point.",
 						// "{YELLOW}/rscfjd draw {_LS}- toggle showing of buffered trajectory as a 3D line.",
-						"{YELLOW}/rscfjd clear {_LS}- clears your buffer",
-						"{YELLOW}/rscfjd reload",
+						"{YELLOW}/rscfjd clear {_LS}- clear your buffer",
+						"{YELLOW}/rscfjd info {_LS}- show info about server settings, your buffer and selected point.",
+						"{YELLOW}/rscfjd reload {_LS}- restart this plugin and reread configuration.",
 					});
 				break;
 			case "reload":
@@ -478,7 +464,7 @@ public class BukkitCommands
 			throw new CommandAnswerException("{_LR}This command cannot be run from console.");
 		return (Player)sender;
 	}
-	private ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID) throws CommandAnswerException
+	public ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID)
 	{
 		buffer.setSelected(pointID);
 		player.setAllowFlight(true);

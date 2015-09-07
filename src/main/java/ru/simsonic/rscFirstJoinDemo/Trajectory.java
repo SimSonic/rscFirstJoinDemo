@@ -4,18 +4,14 @@ import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 
 public class Trajectory
 {
+	// Saveable data
 	public TrajectoryPoint[] points = new TrajectoryPoint[] {};
+	// Transient data
 	public transient String  caption;
 	public transient int     selected;
 	public transient boolean drawSketch;
 	public Trajectory()
 	{
-	}
-	public TrajectoryPlayState newPlayState()
-	{
-		final TrajectoryPlayState result = new TrajectoryPlayState();
-		result.trajectory = this;
-		return result;
 	}
 	public void setSelected(int id)
 	{
@@ -35,5 +31,11 @@ public class Trajectory
 	public TrajectoryPoint getSelectedPoint()
 	{
 		return (selected >= 0 && selected < points.length) ? points[selected] : null;
+	}
+	public TrajectoryPlayState newPlayState()
+	{
+		final TrajectoryPlayState result = new TrajectoryPlayState();
+		result.trajectory = this;
+		return result;
 	}
 }

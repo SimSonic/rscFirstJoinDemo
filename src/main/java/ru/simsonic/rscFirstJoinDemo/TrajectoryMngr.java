@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import ru.simsonic.rscCommonsLibrary.HashAndCipherUtilities;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
@@ -35,8 +36,15 @@ public class TrajectoryMngr
 		trajectories.put(caption, result);
 		return result;
 	}
-	public Trajectory loadBufferTrajectory(String caption)
+	public Trajectory loadBufferTrajectory(Player player)
 	{
+		String caption = player.getName();
+		try
+		{
+			caption = player.getUniqueId().toString();
+		} catch(RuntimeException ex) {
+			// Pre-1.7 servers
+		}
 		final File buffersDir = new File(plugin.getDataFolder(), "buffers");
 		final File trajectoryFile = new File(buffersDir, caption.toLowerCase() + ".json");
 		final Trajectory result = loadTrajectoryFile(trajectoryFile);
@@ -76,10 +84,15 @@ public class TrajectoryMngr
 		} catch(IOException ex) {
 		}
 	}
-	public void saveBufferTrajectory(Trajectory trajectory, String caption)
+	public void saveBufferTrajectory(Trajectory trajectory, Player player)
 	{
-		if(trajectory == null)
-			return;
+		String caption = player.getName();
+		try
+		{
+			caption = player.getUniqueId().toString();
+		} catch(RuntimeException ex) {
+			// Pre-1.7 servers
+		}
 		final File buffersDir = new File(plugin.getDataFolder(), "buffers");
 		final File trajectoryFile = new File(buffersDir, caption.toLowerCase() + ".json");
 		try

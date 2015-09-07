@@ -37,8 +37,12 @@ public final class BukkitPluginMain extends JavaPlugin
 				getConfig().set("settings.signs.note", "{GOLD}Полёт по демо!");
 				getConfig().set("internal.version", 1);
 			case 1:
-				getConfig().set("settings.turn-into-spectator", getConfig().getBoolean("settings.turn-into-spectator", true));
+				consoleLog.info("Updating config.yml version (v1 -> v2).");
+				getConfig().set("settings.turn-into-spectator", null);
+				getConfig().set("settings.signs", null);
+				getConfig().set("internal.version", 2);
 				saveConfig();
+			case 2:
 				// NEWEST VERSION
 				break;
 			default:
@@ -50,13 +54,14 @@ public final class BukkitPluginMain extends JavaPlugin
 	@Override
 	public void onEnable()
 	{
-		new File(getDataFolder(), "buffers").mkdirs();
 		// Read settings
 		reloadConfig();
 		final String firstJoinTrajectory = getConfig().getString("settings.trajectory", Settings.defaultTrajectory);
 		getConfig().set("settings.trajectory", firstJoinTrajectory);
 		trajMngr.setFirstJoinTrajectory(firstJoinTrajectory);
 		saveConfig();
+		// Create directory for player buffers
+		new File(getDataFolder(), "buffers").mkdirs();
 		// Register event's dispatcher
 		getServer().getPluginManager().registerEvents(listener, this);
 		// Done

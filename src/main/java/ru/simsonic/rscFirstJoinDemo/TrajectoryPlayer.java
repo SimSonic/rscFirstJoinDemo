@@ -36,28 +36,33 @@ public class TrajectoryPlayer
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Cannot run demo for {0}, it is empty.", player.getName());
 				return;
 			}
+			// Does this server support SPECTATOR mode?
+			tps.supportSpectatorMode = false;
+			for(GameMode gm : GameMode.values())
+				if(gm.toString().equalsIgnoreCase("SPECTATOR"))
+					tps.supportSpectatorMode = true;
 			// Integrate with PlaceholderAPI
 			final Plugin  placeholder = plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI");
-			tps.usePlaceholders = (placeholder != null && placeholder.isEnabled());
-			if(tps.usePlaceholders)
+			tps.foundPlaceholderAPI = (placeholder != null && placeholder.isEnabled());
+			if(tps.foundPlaceholderAPI)
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] I will use PlaceholderAPI for pre-processing text/titles");
 			// Integrate with ProtocolLib 3.6.4+ to show titles!
 			final Plugin protocolLib = plugin.getServer().getPluginManager().getPlugin("ProtocolLib");
-			tps.protocolLibFound = (protocolLib != null && protocolLib.isEnabled());
+			tps.foundProtocolLib = (protocolLib != null && protocolLib.isEnabled());
 			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] ProtocolLib is {0}",
-				tps.protocolLibFound ? "found." : "not found. Titles are disabled.");
+				tps.foundProtocolLib ? "found." : "not found. Titles are disabled.");
 			// Other setup
 			tps.currentPoint = -1;
 			tps.originalFlightAllow = player.getAllowFlight();
 			tps.originalFlightState = player.isFlying();
-			tps.gamemode = player.getGameMode();
+			tps.originalGameMode = player.getGameMode();
 			player.setAllowFlight(true);
 			player.setFlying(true);
 			player.setPlayerWeather(WeatherType.CLEAR);
-			if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
+			if(tps.supportSpectatorMode)
 				player.setGameMode(GameMode.SPECTATOR);
 			plugin.playStates.put(player, tps);
-			tps.playTask = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
+			tps.scheduledTaskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
 			{
 				@Override
 				public void run()
@@ -79,14 +84,14 @@ public class TrajectoryPlayer
 			final TrajectoryPlayState tps = plugin.playStates.get(player);
 			if(tps != null)
 			{
-				player.setGameMode(tps.gamemode);
+				player.setGameMode(tps.originalGameMode);
 				player.setAllowFlight(tps.originalFlightAllow);
 				player.setFlying(tps.originalFlightState);
 				player.setFallDistance(0.0f);
 				player.setVelocity(new Vector());
 				player.resetPlayerWeather();
 				player.resetPlayerTime();
-				plugin.getServer().getScheduler().cancelTask(tps.playTask);
+				plugin.getServer().getScheduler().cancelTask(tps.scheduledTaskId);
 				final int points = tps.trajectory.points.length;
 				if(points > 0)
 				{
@@ -148,7 +153,7 @@ public class TrajectoryPlayer
 			? tps.trajectory.points[nextPossiblePoint]
 			: null;
 		tps.currentSegmentFlightTime = calculateFlightTime(tp1, tp2);
-		tps.deltaYaw = calculateYawDelta(tp1, tp2);
+		tps.currentSegmentDeltaYaw = calculateYawDelta(tp1, tp2);
 		// Log into console about this event
 		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached {1} #{2}", new Object[]
 		{
@@ -160,7 +165,7 @@ public class TrajectoryPlayer
 		if(tp1.messageOnReach != null && !"".equals(tp1.messageOnReach))
 		{
 			String text = GenericChatCodes.processStringStatic(tp1.messageOnReach);
-			if(tps.usePlaceholders)
+			if(tps.foundPlaceholderAPI)
 				text = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, text);
 			player.sendMessage(text);
 		}
@@ -176,7 +181,7 @@ public class TrajectoryPlayer
 			if(tp1.weatherUpdate)
 				player.setPlayerWeather(tp1.weatherUpdateStormy ? WeatherType.DOWNFALL : WeatherType.CLEAR);
 		// Title/subtitle on point reach
-		if(tps.protocolLibFound)
+		if(tps.foundProtocolLib)
 		{
 			String title = tp1.showTitle != null && !"".equals(tp1.showTitle)
 				? GenericChatCodes.processStringStatic(tp1.showTitle)
@@ -184,7 +189,7 @@ public class TrajectoryPlayer
 			String subtitle = tp1.showSubtitle != null && !"".equals(tp1.showSubtitle)
 				? GenericChatCodes.processStringStatic(tp1.showSubtitle)
 				: "";
-			if(tps.usePlaceholders)
+			if(tps.foundPlaceholderAPI)
 			{
 				title = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, title);
 				subtitle = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, subtitle);
@@ -195,7 +200,7 @@ public class TrajectoryPlayer
 					sendTitle(player, title, subtitle, 20, tp1.showTitleTicks, 20);
 			} catch(Exception ex) {
 				BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] ProtocolLib error, disabling titles.\n{0}", ex);
-				tps.protocolLibFound = false;
+				tps.foundProtocolLib = false;
 			}
 		}
 	}
@@ -260,7 +265,7 @@ public class TrajectoryPlayer
 				// Find rotation
 				final float fp1 = tp1.location.getPitch(), fy1 = tp1.location.getYaw();
 				target.setPitch((float)(fp1 + percent * (tp2.location.getPitch() - fp1)));
-				target.setYaw((float)(fy1 + percent * tps.deltaYaw));
+				target.setYaw((float)(fy1 + percent * tps.currentSegmentDeltaYaw));
 			}
 			// Teleport
 			player.teleport(target, TeleportCause.PLUGIN);
@@ -268,7 +273,7 @@ public class TrajectoryPlayer
 			player.teleport(tp1.location, TeleportCause.PLUGIN);
 			player.setAllowFlight(true);
 			player.setFlying(true);
-			if(plugin.getConfig().getBoolean("settings.turn-into-spectator", true))
+			if(tps.supportSpectatorMode)
 				player.setGameMode(GameMode.SPECTATOR);
 		}
 	}
