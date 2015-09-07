@@ -20,7 +20,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
 import ru.simsonic.rscFirstJoinDemo.Trajectory;
-import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
 public class BukkitListener implements Listener
@@ -83,12 +82,24 @@ public class BukkitListener implements Listener
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event)
 	{
-		plugin.trajectoryPlayer.finishDemo(event.getPlayer());
+		final Player player = event.getPlayer();
+		plugin.trajectoryPlayer.finishDemo(player);
+		if(plugin.buffers.containsKey(player))
+		{
+			final Trajectory buffer = plugin.getBufferedTrajectory(player);
+			plugin.trajMngr.saveBufferTrajectory(buffer, player);
+		}
 	}
 	@EventHandler
 	public void onPlayerKick(PlayerKickEvent event)
 	{
+		final Player player = event.getPlayer();
 		plugin.trajectoryPlayer.finishDemo(event.getPlayer());
+		if(plugin.buffers.containsKey(player))
+		{
+			final Trajectory buffer = plugin.getBufferedTrajectory(player);
+			plugin.trajMngr.saveBufferTrajectory(buffer, player);
+		}
 	}
 	private final String signFirstLine = GenericChatCodes.processStringStatic("{_DG}[rscFJD]");
 	@org.bukkit.event.EventHandler
