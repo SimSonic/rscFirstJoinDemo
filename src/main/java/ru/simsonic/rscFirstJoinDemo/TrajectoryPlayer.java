@@ -265,7 +265,12 @@ public class TrajectoryPlayer
 				// Find rotation
 				final float fp1 = tp1.location.getPitch(), fy1 = tp1.location.getYaw();
 				target.setPitch((float)(fp1 + percent * (tp2.location.getPitch() - fp1)));
-				target.setYaw((float)(fy1 + percent * tps.currentSegmentDeltaYaw));
+				float newYaw = (float)(fy1 + percent * tps.currentSegmentDeltaYaw);
+				if(newYaw < -180.0f)
+					newYaw += 360.0f;
+				if(newYaw > 180.0f)
+					newYaw -= 360.0f;
+				target.setYaw(newYaw);
 			}
 			// Teleport
 			player.teleport(target, TeleportCause.PLUGIN);
@@ -299,9 +304,9 @@ public class TrajectoryPlayer
 		if(tp2 == null)
 			return 0.0f;
 		float result = tp2.location.getYaw() - tp1.location.getYaw();
-		if(result >= 180.0f)
+		if(result > 180.0f)
 			result -= 360.0f;
-		if(result <= -180.0f)
+		if(result < -180.0f)
 			result += 360.0f;
 		return result;
 	}

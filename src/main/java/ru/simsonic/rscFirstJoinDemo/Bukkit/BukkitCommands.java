@@ -414,7 +414,7 @@ public class BukkitCommands
 						"Usage:",
 						"{YELLOW}/rscfjd play [player name] {_LS}- start your buffer (or first-join demo) for player.",
 						"{YELLOW}/rscfjd stop [player name] {_LS}- cancel any demo playing for you or other player.",
-						"{YELLOW}/rscfjd add <freeze ticks> <speed after (bps)> [text w/formatting] {_LS}- add new point after current and select it.",
+						"{YELLOW}/rscfjd add <freezeTicks> <speedAfter> [text] {_LS}- add new point after current and select it.",
 						"{YELLOW}/rscfjd select [#] {_LS}- [re]select point by id for editing and teleport you there.",
 						"{YELLOW}/rscfjd next {_LS}- select next point in your buffer.",
 						"{YELLOW}/rscfjd prev {_LS}- select previous point in your buffer.",
