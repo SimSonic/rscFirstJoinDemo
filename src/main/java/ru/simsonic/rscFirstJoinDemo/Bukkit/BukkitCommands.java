@@ -202,10 +202,7 @@ public class BukkitCommands
 							throw new CommandAnswerException("{_LR}Not a number: {_LS}" + args[0]);
 					}
 					if(pointID >= 0 && pointID < buffer.points.length)
-					{
-						setSelectedPoint(player, buffer, pointID);
-						buffer.setSelected(pointID);
-					}
+						throw new CommandAnswerException(setSelectedPoint(player, buffer, pointID));
 					throw new CommandAnswerException("{_LR}Out of range (0..." + (buffer.points.length - 1) + ").");
 				}
 				break;
@@ -219,8 +216,7 @@ public class BukkitCommands
 					int pointID = buffer.getSelected() + 1;
 					if(pointID == buffer.points.length)
 						throw new CommandAnswerException("{_LR}This is the last point in your buffer!");
-					setSelectedPoint(player, buffer, pointID);
-					throw new CommandAnswerException("{_LR}{_B}Internal error.");
+					throw new CommandAnswerException(setSelectedPoint(player, buffer, pointID));
 				}
 				break;
 			case "prev":
@@ -233,8 +229,7 @@ public class BukkitCommands
 					int pointID = buffer.getSelected();
 					if(pointID == 0)
 						throw new CommandAnswerException("{_LR}This is the first point in your buffer!");
-					setSelectedPoint(player, buffer, pointID - 1);
-					throw new CommandAnswerException("{_LR}{_B}Internal error.");
+					throw new CommandAnswerException(setSelectedPoint(player, buffer, pointID - 1));
 				}
 				break;
 			case "delete":
@@ -467,14 +462,22 @@ public class BukkitCommands
 	}
 	public ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID)
 	{
+		return setSelectedPoint(player, buffer, pointID, true);
+	}
+	public ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID, boolean teleport)
+	{
 		buffer.setSelected(pointID);
-		player.setAllowFlight(true);
-		player.setFlying(true);
-		player.teleport(buffer.points[pointID].location);
-		player.setAllowFlight(true);
-		player.setFlying(true);
 		final ArrayList<String> result = new ArrayList<>();
-		result.add("Selected #" + pointID + " and teleported to it.");
+		if(teleport)
+		{
+			player.setAllowFlight(true);
+			player.setFlying(true);
+			player.teleport(buffer.points[pointID].location);
+			player.setAllowFlight(true);
+			player.setFlying(true);
+			result.add("Selected #" + pointID + " and teleported to it.");
+		} else
+			result.add("Selected #" + pointID + ".");
 		result.add("{_DP}Selected point info:");
 		result.addAll(getPointProps(buffer.getSelectedPoint()));
 		return result;
