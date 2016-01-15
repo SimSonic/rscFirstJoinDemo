@@ -502,6 +502,8 @@ public class BukkitCommands
 					plugin.getPluginLoader().disablePlugin(plugin);
 					plugin.getPluginLoader().enablePlugin(plugin);
 					plugin.getServer().getConsoleSender().sendMessage("[rscfjd] rscFirstJoinDemo has been reloaded.");
+					if(sender instanceof Player)
+						throw new CommandAnswerException("{_LG}Plugin has been reloaded.");
 					return;
 				}
 				break;
