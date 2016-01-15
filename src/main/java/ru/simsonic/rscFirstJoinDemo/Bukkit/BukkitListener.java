@@ -70,10 +70,8 @@ public class BukkitListener implements Listener
 						plugin.setBufferedTrajectory(player, buffer);
 						plugin.commands.setSelectedPoint(player, buffer, buffer.points.length - 1, false);
 						player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix
-							+ "Your buffer has been restored from file, the last one is selected."));
-					} else
-						player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix
-							+ "Your buffer file contains no points."));
+							+ "Your buffer has been restored, selected last point of " + buffer.points.length + " total."));
+					}
 				}
 			}
 		}, delay);
