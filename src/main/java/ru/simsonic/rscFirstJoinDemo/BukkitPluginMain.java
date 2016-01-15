@@ -55,7 +55,6 @@ public final class BukkitPluginMain extends JavaPlugin
 		getServer().getScheduler().cancelTasks(this);
 		for(Player demo : playStates.keySet())
 			trajectoryPlayer.finishDemo(demo);
-		saveConfig();
 		playerBuffers.clear();
 		playStates.clear();
 		trajMngr.clear();
