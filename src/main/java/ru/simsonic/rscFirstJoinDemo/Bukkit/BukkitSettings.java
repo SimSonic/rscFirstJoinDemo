@@ -40,8 +40,9 @@ public class BukkitSettings implements Settings
 				// NEW NODES
 				config.set("settings.first-join-enable", true);
 				config.set("settings.first-join-delay", 20);
+				config.set("settings.require-permissions-for-signs", false);
 				config.set("settings.logging.player-start-stop", true);
-				config.set("settings.logging.player-point-reached", true);
+				config.set("settings.logging.player-point-reached", false);
 				// FINISH
 				config.set("internal.version", 3);
 				plugin.saveConfig();
@@ -86,6 +87,15 @@ public class BukkitSettings implements Settings
 		return result;
 	}
 	@Override
+	public boolean getRequireSignPerms()
+	{
+		final FileConfiguration config = plugin.getConfig();
+		final boolean result = config.getBoolean("settings.require-permissions-for-signs", false);
+		config.set("settings.require-permissions-for-signs", result);
+		plugin.saveConfig();
+		return result;
+	}
+	@Override
 	public boolean getLogStartStop()
 	{
 		final FileConfiguration config = plugin.getConfig();
@@ -98,7 +108,7 @@ public class BukkitSettings implements Settings
 	public boolean getLogPointReached()
 	{
 		final FileConfiguration config = plugin.getConfig();
-		final boolean result = config.getBoolean("settings.log.player-point-reached", true);
+		final boolean result = config.getBoolean("settings.log.player-point-reached", false);
 		config.set("settings.log.player-point-reached", result);
 		plugin.saveConfig();
 		return result;

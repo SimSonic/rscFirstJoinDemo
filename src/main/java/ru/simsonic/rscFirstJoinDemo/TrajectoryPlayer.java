@@ -11,7 +11,7 @@ import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
-import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPlayState;
+import ru.simsonic.rscFirstJoinDemo.Bukkit.TrajectoryPlayState;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 

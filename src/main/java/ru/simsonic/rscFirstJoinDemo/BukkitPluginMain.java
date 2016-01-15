@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
-import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPlayState;
+import ru.simsonic.rscFirstJoinDemo.Bukkit.TrajectoryPlayState;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitCommands;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitListener;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitSettings;

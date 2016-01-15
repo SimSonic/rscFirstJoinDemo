@@ -1,4 +1,5 @@
 package ru.simsonic.rscFirstJoinDemo.API;
+import ru.simsonic.rscFirstJoinDemo.Bukkit.TrajectoryPlayState;
 
 public class Trajectory
 {

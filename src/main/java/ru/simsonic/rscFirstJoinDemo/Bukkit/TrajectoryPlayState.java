@@ -1,8 +1,12 @@
-package ru.simsonic.rscFirstJoinDemo.API;
+package ru.simsonic.rscFirstJoinDemo.Bukkit;
 
 import org.bukkit.GameMode;
+import org.bukkit.Location;
+import ru.simsonic.rscFirstJoinDemo.API.TargetProcessor;
+import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
+import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 
-public class TrajectoryPlayState
+public class TrajectoryPlayState implements TargetProcessor
 {
 	// Server capatibilities
 	public boolean    supportSpectatorMode;
@@ -21,4 +25,20 @@ public class TrajectoryPlayState
 	public long       currentSegmentFlightTime;
 	public float      currentSegmentDeltaYaw;
 	public long       localTick;
+	@Override
+	public void onBegin()
+	{
+	}
+	@Override
+	public void onPointReached(TrajectoryPoint point)
+	{
+	}
+	@Override
+	public void onTeleport(Location location)
+	{
+	}
+	@Override
+	public void onFinish()
+	{
+	}
 }

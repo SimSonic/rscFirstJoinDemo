@@ -260,32 +260,50 @@ public class BukkitCommands
 					});
 				}
 				break;
-			case "merge":
-				if(checkAdminOnly(sender))
-				{
-					final Player player = checkPlayerOnly(sender);
-					final Trajectory buffer = plugin.getBufferedTrajectory(player);
-					if(args[0] != null && !"".equals(args[0]))
-					{
-						final Trajectory merged = plugin.trajMngr.loadTrajectory(args[0]);
-						final ArrayList<TrajectoryPoint> newPoints = new ArrayList<>();
-						newPoints.addAll(Arrays.asList(buffer.points));
-						newPoints.addAll(Arrays.asList(merged.points));
-						buffer.points = newPoints.toArray(new TrajectoryPoint[newPoints.size()]);
-						throw new CommandAnswerException("{_LG}Complete! Length of your buffer now is " + buffer.points.length + " points.");
-					}
-					throw new CommandAnswerException("{_LR}Require merging trajectory caption.");
-				}
-				break;
 			case "time":
 				if(checkAdminOnly(sender))
 				{
 					final TrajectoryPoint point = getSelectedPoint(sender);
-					throw new CommandAnswerException("{_LR}Still not supported.");
-					/*
-					point.showTitle = ChatColor.translateAlternateColorCodes('&', GenericChatCodes.glue(args, " "));
-					throw new CommandAnswerException("{_LG}Point has been edited. Don't forget to save your buffer.");
-					*/
+					if(args[0] != null && !"".equals(args[0]))
+					{
+						switch(args[0].toLowerCase())
+						{
+							case "reset":
+								point.timeReset  = true;
+								point.timeUpdate = false;
+								break;
+							case "lock":
+								try
+								{
+									if(args[1].equals("now"))
+										point.timeUpdateValue = ((Player)sender).getWorld().getTime();
+									else
+										point.timeUpdateValue = Long.parseLong(args[1]);
+									point.timeUpdate      = true;
+									point.timeUpdateLock  = true;
+								} catch(NumberFormatException ex) {
+									throw new CommandAnswerException("{_LR}Wrong command. Read help, please.");
+								}
+								break;
+							case "unlock":
+								try
+								{
+									if(args[1].equals("now"))
+										point.timeUpdateValue = ((Player)sender).getWorld().getTime();
+									else
+										point.timeUpdateValue = Long.parseLong(args[1]);
+									point.timeUpdate      = true;
+									point.timeUpdateLock  = false;
+								} catch(NumberFormatException ex) {
+									throw new CommandAnswerException("{_LR}Wrong command. Read help, please.");
+								}
+								break;
+							default:
+								throw new CommandAnswerException("{_LR}Wrong command. Read help, please.");
+						}
+						throw new CommandAnswerException("{_LG}Done.");
+					}
+					throw new CommandAnswerException("{_LR}Wrong command. Read help, please.");
 				}
 				break;
 			case "weather":
@@ -318,24 +336,55 @@ public class BukkitCommands
 					throw new CommandAnswerException("{_LR}Wrong command. Read help, please.");
 				}
 				break;
+			case "merge":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
+					if(args[0] != null && !"".equals(args[0]))
+					{
+						final Trajectory merged = plugin.trajMngr.loadTrajectory(args[0]);
+						final ArrayList<TrajectoryPoint> newPoints = new ArrayList<>();
+						newPoints.addAll(Arrays.asList(buffer.points));
+						newPoints.addAll(Arrays.asList(merged.points));
+						buffer.points = newPoints.toArray(new TrajectoryPoint[newPoints.size()]);
+						throw new CommandAnswerException("{_LG}Complete! Length of your buffer now is " + buffer.points.length + " points.");
+					}
+					throw new CommandAnswerException("{_LR}Require merging trajectory caption.");
+				}
+				break;
+			case "permission":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.getBufferedTrajectory(player);
+					if(args[0] != null && !"".equals(args[0]))
+					{
+						buffer.requiredPermission = args[0];
+						throw new CommandAnswerException("{_LG}New trajectory-specific permission: {_R}" + buffer.requiredPermission);
+					}
+					buffer.requiredPermission = null;
+					throw new CommandAnswerException("{_YL}Removed trajectory-specific permission.");
+				}
+				break;
 			case "info":
 				if(checkAdminOnly(sender))
 				{
+					final ArrayList<String> answer = new ArrayList<>();
+					Trajectory trajectory = null;
+					if(args[0] != null && !"".equals(args[0]))
+					{
+						trajectory = plugin.trajMngr.loadTrajectory(args[0]);
+						if(trajectory == null)
+							answer.add("{_LR}There is no trajectory with this name: " + args[0]);
+					}
 					final String  firstJoinCaption = plugin.settings.getFirstJoinTrajectory();
 					final boolean firstJoinLoaded  = plugin.trajMngr.contains(firstJoinCaption);
-					final ArrayList<String> answer = new ArrayList<>();
 					answer.add("{_DP}Server configuration:");
 					answer.add("first-join-trajectory: {_R}" + firstJoinCaption);
 					answer.add("first-join-trajectory is " + (firstJoinLoaded ? "{_DG}already loaded" : "{_DR}not loaded yet"));
 					if(firstJoinLoaded)
 						answer.add("first-join-trajectory contains points: {_R}" + plugin.trajMngr.get(firstJoinCaption).points.length);
-					Trajectory trajectory = null;
-					if(args[0] != null && !"".equals(args[0]))
-					{
-						trajectory = plugin.trajMngr.get(args[0]);
-						if(trajectory == null)
-							answer.add("{_LR}There is no trajectory with this name: " + args[0]);
-					}
 					if(trajectory == null)
 					{
 						if(sender instanceof Player)
@@ -346,7 +395,7 @@ public class BukkitCommands
 							else
 								answer.add("Your have no trajectory points in your buffer");
 						} else
-							answer.add("{_LR}You have to enter correct trajectory caption for this console command.");
+							trajectory = plugin.trajMngr.getFirstJoinTrajectory();
 					}
 					if(trajectory != null && trajectory.points.length > 0)
 						answer.addAll(getTrajectoryProps(sender, trajectory));
@@ -432,13 +481,14 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd titletime <ticks> {_LS}- update showTitleTicks of selected point.",
 						"{YELLOW}/rscfjd title [text] {_LS}- update showTitle of selected point.",
 						"{YELLOW}/rscfjd subtitle [text] {_LS}- update showSubtitle of selected point.",
-						// "{YELLOW}/rscfjd time <reset|lock [value]|unlock [value]|<value>>{_LS}- edit time.",
-						"{YELLOW}/rscfjd weather <reset|sunny|stormy> {_LS}- edit weather.",
+						"{YELLOW}/rscfjd time <reset|lock <value|now>|unlock <value|now>>{_LS}- setup point's time.",
+						"{YELLOW}/rscfjd weather <reset|sunny|stormy> {_LS}- setup point's weather.",
 						"{YELLOW}/rscfjd merge <caption> {_LS}- add another trajectory to the end of your buffer.",
 						"{YELLOW}/rscfjd delete {_LS}- remove selected point.",
 						"{YELLOW}/rscfjd info {_LS}- show info about server settings, your buffer and selected point.",
 						// "{YELLOW}/rscfjd draw {_LS}- toggle showing of buffered trajectory as a 3D line.",
 						"{YELLOW}/rscfjd clear {_LS}- clear your buffer",
+						"{YELLOW}/rscfjd permission [permission]{_LS}- set/clear permission required to use it by sign.",
 						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file.",
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer.",
 						"{YELLOW}/rscfjd help {_LS}- show this help page.",
@@ -510,10 +560,13 @@ public class BukkitCommands
 		if(trajectory.requiredPermission != null && !"".equals(trajectory.requiredPermission))
 			result.add("Trajectory-specific permission: " + trajectory.requiredPermission);
 		result.add("Trajectory points: {RESET}" + trajectory.points.length);
-		result.add("Selected point ID is #" + trajectory.getSelected() + " (in range 0..." + (trajectory.points.length - 1) + ")");
-		result.add("{_DP}Selected point info:");
-		final TrajectoryPoint point = getSelectedPoint(sender);
-		result.addAll(getPointProps(point));
+		if(sender instanceof Player)
+		{
+			result.add("Selected point ID is #" + trajectory.getSelected() + " (in range 0..." + (trajectory.points.length - 1) + ")");
+			result.add("{_DP}Selected point info:");
+			final TrajectoryPoint point = getSelectedPoint(sender);
+			result.addAll(getPointProps(point));
+		}
 		return result;
 	}
 	private ArrayList<String> getPointProps(TrajectoryPoint point)

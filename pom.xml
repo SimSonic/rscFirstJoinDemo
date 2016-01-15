@@ -49,19 +49,19 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.8-R0.1-SNAPSHOT</version>
+			<version>1.8.8-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
-			<version>2.3.1</version>
+			<version>2.5</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>ru.simsonic</groupId>
 			<artifactId>rscCommonsLibrary</artifactId>
-			<version>2.1.0</version>
+			<version>2.1.2</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

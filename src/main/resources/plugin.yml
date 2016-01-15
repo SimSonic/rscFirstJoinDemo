@@ -15,3 +15,6 @@ permissions:
   rscfjd.admin:
     description: Access to all functions
     default: op
+  rscfjd.sign.*:
+    description: Ability to use all signs with trajectories
+    default: op

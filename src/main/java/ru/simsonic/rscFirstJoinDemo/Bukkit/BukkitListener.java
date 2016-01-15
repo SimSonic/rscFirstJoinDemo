@@ -117,7 +117,14 @@ public class BukkitListener implements Listener
 		if(plugin.playStates.containsKey(player) && !player.hasPermission("rscfjd.admin"))
 			event.setCancelled(true);
 	}
-	private final String signFirstLine = GenericChatCodes.processStringStatic("{_DG}[rscFJD]");
+	@org.bukkit.event.EventHandler
+	public void onPlayerDamage(final EntityDamageEvent event)
+	{
+		final Entity entity = event.getEntity();
+		if(entity instanceof Player)
+			if(plugin.playStates.containsKey((Player)entity))
+				event.setCancelled(true);
+	}
 	@org.bukkit.event.EventHandler
 	public void onSignChange(final SignChangeEvent event)
 	{
@@ -126,15 +133,17 @@ public class BukkitListener implements Listener
 		final Player player = event.getPlayer();
 		if(!player.hasPermission("rscfjd.admin"))
 		{
-			player.sendMessage(GenericChatCodes.processStringStatic(
-				Settings.chatPrefix + "{_LR}Not enough permissions."));
+			player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + "{_LR}Not enough permissions."));
 			event.setCancelled(true);
 			return;
 		}
-		event.setLine(0, signFirstLine);
-		final String flight = event.getLine(1).isEmpty() ? plugin.settings.getFirstJoinTrajectory() : event.getLine(1);
+		final String caption = event.getLine(1).isEmpty()
+			? plugin.settings.getFirstJoinTrajectory()
+			: event.getLine(1);
+		event.setLine(0, Settings.signLine0);
 		event.setLine(1, GenericChatCodes.processStringStatic("{_LG}Click to play demo"));
-		event.setLine(3, flight);
+		event.setLine(2, "");
+		event.setLine(3, caption);
 		player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + "{_LG}Done."));
 	}
 	@org.bukkit.event.EventHandler
@@ -145,18 +154,23 @@ public class BukkitListener implements Listener
 		if(!(event.getClickedBlock().getState() instanceof Sign))
 			return;
 		final Sign sign = (Sign)event.getClickedBlock().getState();
-		if(!sign.getLine(0).equals(signFirstLine))
+		if(!sign.getLine(0).equals(Settings.signLine0))
 			return;
-		final String trajectoryName = sign.getLine(3);
-		final Trajectory trajectory = plugin.trajMngr.loadTrajectory(trajectoryName);
-		plugin.trajectoryPlayer.beginDemo(event.getPlayer(), trajectory);
-	}
-	@org.bukkit.event.EventHandler
-	public void onPlayerDamage(final EntityDamageEvent event)
-	{
-		final Entity entity = event.getEntity();
-		if(entity instanceof Player)
-			if(plugin.playStates.containsKey((Player)entity))
-				event.setCancelled(true);
+		// Load such trajectory
+		final String caption = sign.getLine(3);
+		final Trajectory trajectory = plugin.trajMngr.loadTrajectory(caption);
+		if(trajectory.points.length == 0)
+			return;
+		// Check specific permission
+		final Player player = event.getPlayer();
+		boolean permSign = plugin.settings.getRequireSignPerms()
+			? player.hasPermission("rscfjd.sign." + trajectory.caption.toLowerCase())
+			: true;
+		boolean permTrajectory = trajectory.requiredPermission != null && !"".equals(trajectory.requiredPermission)
+			? player.hasPermission(trajectory.requiredPermission)
+			: permSign;
+		// Start if allowed
+		if(permSign || permTrajectory)
+			plugin.trajectoryPlayer.beginDemo(player, trajectory);
 	}
 }
