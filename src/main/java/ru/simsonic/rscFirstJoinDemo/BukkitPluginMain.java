@@ -10,57 +10,38 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
+import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
+import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPlayState;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitCommands;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitListener;
+import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitSettings;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
 public final class BukkitPluginMain extends JavaPlugin
 {
-	public final static Logger consoleLog = Bukkit.getLogger();
+	public final static Logger  consoleLog = Bukkit.getLogger();
+	public final BukkitSettings settings = new BukkitSettings(this);
 	public final BukkitListener listener = new BukkitListener(this);
 	public final BukkitCommands commands = new BukkitCommands(this);
 	public final TrajectoryMngr trajMngr = new TrajectoryMngr(this);
 	public final TrajectoryPlayer trajectoryPlayer = new TrajectoryPlayer(this);
-	public final HashMap<Player, TrajectoryPlayState> playStates = new HashMap<>();
-	public final HashMap<Player, Trajectory> buffers = new HashMap<>();
+	public final HashMap<Player, TrajectoryPlayState> playStates    = new HashMap<>();
+	public final HashMap<Player, Trajectory>          playerBuffers = new HashMap<>();
 	@Override
 	public void onLoad()
 	{
 		saveDefaultConfig();
-		switch(getConfig().getInt("internal.version", 0))
-		{
-			case 0:
-				// EMPTY (CLEARED) CONFIG?
-				consoleLog.info("Filling config.yml with default values...");
-				getConfig().set("settings.trajectory", Settings.defaultTrajectory);
-				getConfig().set("settings.signs.note", "{GOLD}Полёт по демо!");
-				getConfig().set("internal.version", 1);
-			case 1:
-				consoleLog.info("Updating config.yml version (v1 -> v2).");
-				getConfig().set("settings.turn-into-spectator", null);
-				getConfig().set("settings.signs", null);
-				getConfig().set("internal.version", 2);
-				saveConfig();
-			case 2:
-				// NEWEST VERSION
-				break;
-			default:
-				// UNSUPPORTED VERSION?
-				break;
-		}
+		settings.onLoad();
 		consoleLog.log(Level.INFO, "[rscfjd] rscFirstJoinDemo has been loaded.");
 	}
 	@Override
 	public void onEnable()
 	{
-		// Read settings
-		reloadConfig();
-		final String firstJoinTrajectory = getConfig().getString("settings.trajectory", Settings.defaultTrajectory);
-		getConfig().set("settings.trajectory", firstJoinTrajectory);
-		trajMngr.setFirstJoinTrajectory(firstJoinTrajectory);
-		saveConfig();
-		// Create directory for player buffers
+		settings.onEnable();
+		final String firstJoinTrajectory = settings.getFirstJoinTrajectory();
+		trajMngr.setFirstJoinTrajectoryCaption(firstJoinTrajectory);
+		// Create directory for player playerBuffers
 		new File(getDataFolder(), "buffers").mkdirs();
 		// Register event's dispatcher
 		getServer().getPluginManager().registerEvents(listener, this);
@@ -75,7 +56,7 @@ public final class BukkitPluginMain extends JavaPlugin
 		for(Player demo : playStates.keySet())
 			trajectoryPlayer.finishDemo(demo);
 		saveConfig();
-		buffers.clear();
+		playerBuffers.clear();
 		playStates.clear();
 		trajMngr.clear();
 		consoleLog.info("[rscfjd] rscFirstJoinDemo has been disabled.");
@@ -100,14 +81,14 @@ public final class BukkitPluginMain extends JavaPlugin
 	}
 	public Trajectory getBufferedTrajectory(Player player)
 	{
-		if(buffers.containsKey(player))
-			return buffers.get(player);
+		if(playerBuffers.containsKey(player))
+			return playerBuffers.get(player);
 		final Trajectory result = new Trajectory();
-		buffers.put(player, result);
+		playerBuffers.put(player, result);
 		return result;
 	}
 	public void setBufferedTrajectory(Player player, Trajectory buffer)
 	{
-		buffers.put(player, buffer);
+		playerBuffers.put(player, buffer);
 	}
 }

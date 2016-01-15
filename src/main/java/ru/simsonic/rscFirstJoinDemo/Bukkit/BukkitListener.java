@@ -16,8 +16,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
+import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
-import ru.simsonic.rscFirstJoinDemo.Trajectory;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
 public class BukkitListener implements Listener
@@ -35,23 +35,30 @@ public class BukkitListener implements Listener
 		for(Player demo : plugin.playStates.keySet())
 			player.hidePlayer(demo);
 		// Plan other actions after some little delay
+		final int delay = plugin.settings.getFirstJoinDelay();
 		plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable()
 		{
 			@Override
 			public void run()
 			{
-				// Check if we should show the demo for him
-				if(!player.hasPlayedBefore())
+				// Check if first-join trajectory is enabled for all
+				if(plugin.settings.getFirstJoinEnabled())
 				{
-					if(player.hasPermission("rscfjd.admin"))
+					// Check if we should show the demo for this player
+					if(!player.hasPlayedBefore())
 					{
-						player.sendMessage(GenericChatCodes.processStringStatic(
-							Settings.chatPrefix + "You have skipped demo due to having admin permission."));
-						BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Skipping player {0} due to admin permission.", player.getName());
-					} else {
-						final Trajectory demo = plugin.trajMngr.lazyFirstJoinTrajectoryLoading();
-						if(demo != null)
-							plugin.trajectoryPlayer.beginDemo(player, demo);
+						// Check if the player is admin
+						if(player.hasPermission("rscfjd.admin"))
+						{
+							player.sendMessage(GenericChatCodes.processStringStatic(
+								Settings.chatPrefix + "You have skipped demo due to having admin permission."));
+							BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Skipping player {0} due to admin permission.", player.getName());
+						} else {
+							// Let's start it
+							final Trajectory demo = plugin.trajMngr.getFirstJoinTrajectory();
+							if(demo != null)
+								plugin.trajectoryPlayer.beginDemo(player, demo);
+						}
 					}
 				}
 				// Check if he is admin so we need to restore his buffer
@@ -69,18 +76,18 @@ public class BukkitListener implements Listener
 							+ "Your buffer file contains no points."));
 				}
 			}
-		}, 20);
+		}, delay);
 	}
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event)
 	{
 		final Player player = event.getPlayer();
 		plugin.trajectoryPlayer.finishDemo(player);
-		if(plugin.buffers.containsKey(player))
+		if(plugin.playerBuffers.containsKey(player))
 		{
 			final Trajectory buffer = plugin.getBufferedTrajectory(player);
 			plugin.trajMngr.saveBufferTrajectory(buffer, player);
-			plugin.buffers.remove(player);
+			plugin.playerBuffers.remove(player);
 		}
 	}
 	@EventHandler
@@ -88,11 +95,11 @@ public class BukkitListener implements Listener
 	{
 		final Player player = event.getPlayer();
 		plugin.trajectoryPlayer.finishDemo(event.getPlayer());
-		if(plugin.buffers.containsKey(player))
+		if(plugin.playerBuffers.containsKey(player))
 		{
 			final Trajectory buffer = plugin.getBufferedTrajectory(player);
 			plugin.trajMngr.saveBufferTrajectory(buffer, player);
-			plugin.buffers.remove(player);
+			plugin.playerBuffers.remove(player);
 		}
 	}
 	@EventHandler
@@ -125,7 +132,7 @@ public class BukkitListener implements Listener
 			return;
 		}
 		event.setLine(0, signFirstLine);
-		final String flight = event.getLine(1).isEmpty() ? plugin.trajMngr.getFirstJoinCaption() : event.getLine(1);
+		final String flight = event.getLine(1).isEmpty() ? plugin.settings.getFirstJoinTrajectory() : event.getLine(1);
 		event.setLine(1, GenericChatCodes.processStringStatic("{_LG}Click to play demo"));
 		event.setLine(3, flight);
 		player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + "{_LG}Done."));

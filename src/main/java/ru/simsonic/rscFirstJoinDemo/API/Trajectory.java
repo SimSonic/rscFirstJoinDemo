@@ -1,11 +1,10 @@
-package ru.simsonic.rscFirstJoinDemo;
-
-import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
+package ru.simsonic.rscFirstJoinDemo.API;
 
 public class Trajectory
 {
 	// Saveable data
 	public TrajectoryPoint[] points = new TrajectoryPoint[] {};
+	public String requiredPermission;
 	// Transient data
 	public transient String  caption;
 	public transient int     selected;

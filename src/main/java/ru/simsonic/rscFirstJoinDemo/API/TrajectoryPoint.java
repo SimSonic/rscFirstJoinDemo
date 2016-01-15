@@ -4,6 +4,7 @@ import org.bukkit.Location;
 
 public class TrajectoryPoint extends SightedPoint
 {
+	public int     _id                 = 0;
 	public float   speedAfter          = 1.0f;
 	public String  messageOnReach      = "";
 	public int     freezeTicks         = 0;

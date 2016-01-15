@@ -5,9 +5,9 @@ import java.util.Arrays;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
-import ru.simsonic.rscFirstJoinDemo.Trajectory;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
@@ -321,54 +321,66 @@ public class BukkitCommands
 			case "info":
 				if(checkAdminOnly(sender))
 				{
-					final String  firstJoinCaption = plugin.trajMngr.getFirstJoinCaption();
+					final String  firstJoinCaption = plugin.settings.getFirstJoinTrajectory();
 					final boolean firstJoinLoaded  = plugin.trajMngr.contains(firstJoinCaption);
 					final ArrayList<String> answer = new ArrayList<>();
 					answer.add("{_DP}Server configuration:");
-					answer.add("firstJoinTrajectory: {RESET}" + firstJoinCaption);
-					answer.add("firstJoinTrajectory is " + (firstJoinLoaded ? "{_DG}already loaded" : "{_DR}not loaded yet"));
+					answer.add("first-join-trajectory: {_R}" + firstJoinCaption);
+					answer.add("first-join-trajectory is " + (firstJoinLoaded ? "{_DG}already loaded" : "{_DR}not loaded yet"));
 					if(firstJoinLoaded)
-						answer.add("firstJoinTrajectory contains points: {RESET}" + plugin.trajMngr.get(firstJoinCaption).points.length);
-					if(sender instanceof Player)
+						answer.add("first-join-trajectory contains points: {_R}" + plugin.trajMngr.get(firstJoinCaption).points.length);
+					Trajectory trajectory = null;
+					if(args[0] != null && !"".equals(args[0]))
 					{
-						final Trajectory buffer = plugin.buffers.get((Player)sender);
-						if(buffer != null && buffer.points.length > 0)
-						{
-							answer.add("{_DP}Your buffer state:");
-							answer.add("Your have some trajectory points in your buffer: {RESET}" + buffer.points.length);
-							answer.add("Selected point ID is #" + buffer.getSelected() + " (in range 0..." + (buffer.points.length - 1) + ")");
-							answer.add("{_DP}Selected point info:");
-							final TrajectoryPoint point = getSelectedPoint(sender);
-							answer.addAll(getPointProps(point));
-						} else
-							answer.add("Your have no trajectory points in your buffer");
+						trajectory = plugin.trajMngr.get(args[0]);
+						if(trajectory == null)
+							answer.add("{_LR}There is no trajectory with this name: " + args[0]);
 					}
+					if(trajectory == null)
+					{
+						if(sender instanceof Player)
+						{
+							trajectory = plugin.playerBuffers.get((Player)sender);
+							if(trajectory != null)
+								answer.add("{_DP}Your's buffer state:");
+							else
+								answer.add("Your have no trajectory points in your buffer");
+						} else
+							answer.add("{_LR}You have to enter correct trajectory caption for this console command.");
+					}
+					if(trajectory != null && trajectory.points.length > 0)
+						answer.addAll(getTrajectoryProps(sender, trajectory));
 					throw new CommandAnswerException(answer);
 				}
 				break;
 			case "play":
 				if(checkAdminOnly(sender))
 				{
-					Trajectory demo = null;
-					if(sender instanceof Player)
+					Player     target;
+					Trajectory trajectory = null;
+					if(args[0] != null && !"".equals(args[0]))
+					{
+						target = plugin.getServer().getPlayer(args[0]);
+						if(target == null)
+							throw new CommandAnswerException("{_LR}Cannot find such player.");
+						if(args[1] != null && !"".equals(args[1]))
+							trajectory = plugin.trajMngr.loadTrajectory(args[1]);
+					} else {
+						target = checkPlayerOnly(sender);
+					}
+					if(target == null && sender instanceof Player)
 					{
 						final Player player = (Player)sender;
-						if(plugin.buffers.containsKey(player))
-							demo = plugin.buffers.get(player);
+						target = player;
+						if(plugin.playerBuffers.containsKey(player))
+							trajectory = plugin.playerBuffers.get(player);
 					}
-					final Player target = (args[0] != null && !"".equals(args[0]))
-						? plugin.getServer().getPlayer(args[0])
-						: checkPlayerOnly(sender);
-					if(target == null)
-						throw new CommandAnswerException("{_LR}Cannot find such player.");
-					if(demo == null)
-						demo = plugin.trajMngr.lazyFirstJoinTrajectoryLoading();
-					if(demo != null)
+					if(trajectory == null)
+						trajectory = plugin.trajMngr.getFirstJoinTrajectory();
+					if(trajectory != null)
 					{
-						plugin.trajectoryPlayer.beginDemo(target, demo);
-						throw new CommandAnswerException("{_LG}Demo "
-							+ (demo.caption != null && !"".equals(demo.caption) ? "'" + demo.caption + "'" : "[memory buffer]")
-							+ " has been started.");
+						plugin.trajectoryPlayer.beginDemo(target, trajectory);
+						throw new CommandAnswerException("{_LG}Demo " + trajectory.caption + " has been started.");
 					}
 					throw new CommandAnswerException("{_LR}{_B}Internal error.");
 				}
@@ -407,8 +419,8 @@ public class BukkitCommands
 					throw new CommandAnswerException(new String[]
 					{
 						"Usage:",
-						"{YELLOW}/rscfjd play [player name] {_LS}- start your buffer (or first-join demo) for player.",
-						"{YELLOW}/rscfjd stop [player name] {_LS}- cancel any demo playing for you or other player.",
+						"{YELLOW}/rscfjd play [<player> [caption]] {_LS}- start specific/first-join demo playing for you/player.",
+						"{YELLOW}/rscfjd stop [player] {_LS}- cancel demo playing for you/player.",
 						"{YELLOW}/rscfjd add <freezeTicks> <speedAfter> [text] {_LS}- add new point after current and select it.",
 						"{YELLOW}/rscfjd select [#] {_LS}- [re]select point by id for editing and teleport you there.",
 						"{YELLOW}/rscfjd next {_LS}- select next point in your buffer.",
@@ -485,10 +497,23 @@ public class BukkitCommands
 	private TrajectoryPoint getSelectedPoint(CommandSender sender) throws CommandAnswerException
 	{
 		final Player player = checkPlayerOnly(sender);
-		final Trajectory buffer = plugin.buffers.get(player);
+		final Trajectory buffer = plugin.playerBuffers.get(player);
 		final TrajectoryPoint result = buffer != null ? buffer.getSelectedPoint() : null;
 		if(result == null)
 			throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points first!");
+		return result;
+	}
+	private ArrayList<String> getTrajectoryProps(CommandSender sender, Trajectory trajectory) throws CommandAnswerException
+	{
+		final ArrayList<String> result = new ArrayList<>();
+		result.add("Trajectory caption: " + trajectory.caption);
+		if(trajectory.requiredPermission != null && !"".equals(trajectory.requiredPermission))
+			result.add("Trajectory-specific permission: " + trajectory.requiredPermission);
+		result.add("Trajectory points: {RESET}" + trajectory.points.length);
+		result.add("Selected point ID is #" + trajectory.getSelected() + " (in range 0..." + (trajectory.points.length - 1) + ")");
+		result.add("{_DP}Selected point info:");
+		final TrajectoryPoint point = getSelectedPoint(sender);
+		result.addAll(getPointProps(point));
 		return result;
 	}
 	private ArrayList<String> getPointProps(TrajectoryPoint point)

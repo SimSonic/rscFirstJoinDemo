@@ -9,18 +9,19 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import ru.simsonic.rscCommonsLibrary.HashAndCipherUtilities;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
+import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 
 public class TrajectoryMngr
 {
 	private final BukkitPluginMain plugin;
 	private final HashMap<String, Trajectory> trajectories = new HashMap<>();
-	public String firstJoinTrajectory = Settings.defaultTrajectory;
+	public String firstJoinTrajectory = Settings.defaultFirstJoinTrajectory;
 	public TrajectoryMngr(BukkitPluginMain plugin)
 	{
 		this.plugin = plugin;
 	}
-	public Trajectory lazyFirstJoinTrajectoryLoading()
+	public Trajectory getFirstJoinTrajectory()
 	{
 		if(trajectories.containsKey(firstJoinTrajectory) == false)
 			loadTrajectory(firstJoinTrajectory);
@@ -52,23 +53,6 @@ public class TrajectoryMngr
 		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} contains ({1} points)",
 			new Object[] { caption, result.points.length });
 		trajectories.put(caption, result);
-		return result;
-	}
-	private Trajectory loadTrajectoryFile(File file)
-	{
-		Trajectory result;
-		try
-		{
-			result = HashAndCipherUtilities.loadObject(file, Trajectory.class);
-		} catch(IOException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Error reading {0}: {1}",
-				new Object[] { file.toString(), ex });
-			result = new Trajectory();
-		}
-		if(result.points == null)
-			result.points = new TrajectoryPoint[] {};
-		for(TrajectoryPoint tp : result.points)
-			tp.location = locationForTrajectoryPoint(tp);
 		return result;
 	}
 	public void saveTrajectory(Trajectory trajectory, String caption)
@@ -103,30 +87,7 @@ public class TrajectoryMngr
 		} catch(IOException ex) {
 		}
 	}
-	public void saveTrajectoryFile(Trajectory trajectory, File file) throws IOException
-	{
-		try
-		{
-			HashAndCipherUtilities.saveObject(file, trajectory, Trajectory.class);
-		} catch(IOException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Error writing {0}: {1}",
-				new Object[] { file.toString(), ex });
-			throw ex;
-		}
-	}
-	private Location locationForTrajectoryPoint(TrajectoryPoint tp)
-	{
-		final World world = plugin.getServer().getWorld(tp.world);
-		if(world != null)
-			return new Location(world, tp.x, tp.y, tp.z, tp.yaw, tp.pitch);
-		BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] World not found: {0}", tp.world);
-		return null;
-	}
-	public String getFirstJoinCaption()
-	{
-		return firstJoinTrajectory;
-	}
-	public void setFirstJoinTrajectory(String caption)
+	public void setFirstJoinTrajectoryCaption(String caption)
 	{
 		this.firstJoinTrajectory = caption;
 	}
@@ -141,5 +102,43 @@ public class TrajectoryMngr
 	public void clear()
 	{
 		trajectories.clear();
+	}
+	private void saveTrajectoryFile(Trajectory trajectory, File file) throws IOException
+	{
+		for(int id = 0; id < trajectory.points.length; id += 1)
+			trajectory.points[id]._id = id;
+		try
+		{
+			HashAndCipherUtilities.saveObject(file, trajectory, Trajectory.class);
+		} catch(IOException ex) {
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Error writing {0}: {1}",
+				new Object[] { file.toString(), ex });
+			throw ex;
+		}
+	}
+	private Trajectory loadTrajectoryFile(File file)
+	{
+		Trajectory result;
+		try
+		{
+			result = HashAndCipherUtilities.loadObject(file, Trajectory.class);
+		} catch(IOException ex) {
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Error reading {0}: {1}",
+				new Object[] { file.toString(), ex });
+			result = new Trajectory();
+		}
+		if(result.points == null)
+			result.points = new TrajectoryPoint[] {};
+		for(TrajectoryPoint tp : result.points)
+			tp.location = locationForTrajectoryPoint(tp);
+		return result;
+	}
+	private Location locationForTrajectoryPoint(TrajectoryPoint tp)
+	{
+		final World world = plugin.getServer().getWorld(tp.world);
+		if(world != null)
+			return new Location(world, tp.x, tp.y, tp.z, tp.yaw, tp.pitch);
+		BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] World isn't found: {0}", tp.world);
+		return null;
 	}
 }

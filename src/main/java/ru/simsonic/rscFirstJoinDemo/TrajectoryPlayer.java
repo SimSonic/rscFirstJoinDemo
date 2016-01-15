@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
+import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
+import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPlayState;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
@@ -71,8 +73,9 @@ public class TrajectoryPlayer
 					processDemoStep(player, tps);
 				}
 			}, 1, 1);
-			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Starting playing demo '{0}' to {1}",
-				new Object[] { tps.trajectory.caption, player.getName() });
+			if(plugin.settings.getLogStartStop())
+				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Starting playing demo {0} to {1}",
+					new Object[] { tps.trajectory.caption, player.getName() });
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo starting error: {0}", ex);
 		}
@@ -99,7 +102,8 @@ public class TrajectoryPlayer
 					player.saveData();
 				}
 				plugin.playStates.remove(player);
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
+				if(plugin.settings.getLogStartStop())
+					BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
 			}
 			for(Player online : plugin.getServer().getOnlinePlayers())
 				online.showPlayer(player);
@@ -155,12 +159,15 @@ public class TrajectoryPlayer
 		tps.currentSegmentFlightTime = calculateFlightTime(tp1, tp2);
 		tps.currentSegmentDeltaYaw = calculateYawDelta(tp1, tp2);
 		// Log into console about this event
-		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached {1} #{2}", new Object[]
-		{
-			player.getName(),
-			tps.trajectory.caption != null ? tps.trajectory.caption : "his buffer",
-			tps.currentPoint,
-		});
+		if(plugin.settings.getLogPointReached())
+			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached {1} #{2}", new Object[]
+			{
+				player.getName(),
+				tps.trajectory.caption != null
+					? tps.trajectory.caption
+					: "his own buffer",
+				tps.currentPoint,
+			});
 		// Message on point reach
 		if(tp1.messageOnReach != null && !"".equals(tp1.messageOnReach))
 		{
