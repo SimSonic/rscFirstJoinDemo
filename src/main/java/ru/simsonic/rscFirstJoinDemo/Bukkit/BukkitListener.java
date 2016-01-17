@@ -34,6 +34,9 @@ public class BukkitListener implements Listener
 		// Hide all other demo players
 		for(Player demo : plugin.playStates.keySet())
 			player.hidePlayer(demo);
+		// Inform admins about updates
+		if(player.hasPermission("rscfjd.admin"))
+			plugin.updating.onAdminJoin(player);
 		// Plan other actions after some little delay
 		final int delay = plugin.settings.getFirstJoinDelay();
 		plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable()

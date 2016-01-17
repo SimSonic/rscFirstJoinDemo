@@ -493,6 +493,7 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer.",
 						"{YELLOW}/rscfjd help {_LS}- show this help page.",
 						"{YELLOW}/rscfjd reload {_LS}- restart this plugin and reread configuration.",
+						"{YELLOW}/rscfjd update {_LS}- download and install new version.",
 					});
 				break;
 			case "reload":
@@ -504,6 +505,15 @@ public class BukkitCommands
 					plugin.getServer().getConsoleSender().sendMessage("[rscfjd] rscFirstJoinDemo has been reloaded.");
 					if(sender instanceof Player)
 						throw new CommandAnswerException("{_LG}Plugin has been reloaded.");
+					return;
+				}
+				break;
+			case "update":
+				if(checkAdminOnly(sender))
+				{
+					plugin.updating.onDoUpdate(sender);
+					if(sender instanceof Player)
+						throw new CommandAnswerException("{_LG}Done.");
 					return;
 				}
 				break;
