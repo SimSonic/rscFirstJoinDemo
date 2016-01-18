@@ -22,62 +22,52 @@ public class TrajectoryPlayer
 	{
 		this.plugin = plugin;
 	}
-	public void beginDemo(final Player player, final Trajectory trajectory)
+	public void resumeDemo(final Player player, final Trajectory trajectory)
 	{
-		// Cancel old demo if it was
-		finishDemo(player);
-		// Hide player from all
-		for(Player online : plugin.getServer().getOnlinePlayers())
-			online.hidePlayer(player);
 		try
 		{
-			// Start flight
-			final TrajectoryPlayState tps = trajectory.newPlayState();
-			if(tps.trajectory.points.length <= 0)
-			{
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Cannot run demo for {0}, it is empty.", player.getName());
-				return;
-			}
-			// Does this server support SPECTATOR mode?
-			tps.supportSpectatorMode = false;
-			for(GameMode gm : GameMode.values())
-				if(gm.toString().equalsIgnoreCase("SPECTATOR"))
-					tps.supportSpectatorMode = true;
-			// Integrate with PlaceholderAPI
-			final Plugin  placeholder = plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI");
-			tps.foundPlaceholderAPI = (placeholder != null && placeholder.isEnabled());
-			if(tps.foundPlaceholderAPI)
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] I will use PlaceholderAPI for pre-processing text/titles");
-			// Integrate with ProtocolLib 3.6.4+ to show titles!
-			final Plugin protocolLib = plugin.getServer().getPluginManager().getPlugin("ProtocolLib");
-			tps.foundProtocolLib = (protocolLib != null && protocolLib.isEnabled());
-			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] ProtocolLib is {0}",
-				tps.foundProtocolLib ? "found." : "not found. Titles are disabled.");
-			// Other setup
+			final TrajectoryPlayState tps = prepareDemo(player, trajectory);
+			tps.currentPoint = tps.trajectory.selected > 1
+				? tps.trajectory.selected - 2
+				: -1;
+		} catch(RuntimeException ex) {
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo resuming error: {0}", ex);
+		}
+	}
+	public void beginDemo(final Player player, final Trajectory trajectory)
+	{
+		try
+		{
+			final TrajectoryPlayState tps = prepareDemo(player, trajectory);
 			tps.currentPoint = -1;
-			tps.originalFlightAllow = player.getAllowFlight();
-			tps.originalFlightState = player.isFlying();
-			tps.originalGameMode = player.getGameMode();
-			player.setAllowFlight(true);
-			player.setFlying(true);
-			player.setPlayerWeather(WeatherType.CLEAR);
-			if(tps.supportSpectatorMode)
-				player.setGameMode(GameMode.SPECTATOR);
-			plugin.playStates.put(player, tps);
-			tps.scheduledTaskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					tps.localTick += 1;
-					processDemoStep(player, tps);
-				}
-			}, 1, 1);
 			if(plugin.settings.getLogStartStop())
 				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Starting playing demo {0} to {1}",
 					new Object[] { tps.trajectory.caption, player.getName() });
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo starting error: {0}", ex);
+		}
+	}
+	public void suspendDemo(Player player)
+	{
+		try
+		{
+			final TrajectoryPlayState tps = plugin.playStates.get(player);
+			if(tps != null)
+			{
+				plugin.getServer().getScheduler().cancelTask(tps.scheduledTaskId);
+				player.setGameMode   (tps.originalGameMode);
+				player.setAllowFlight(tps.originalFlightAllow);
+				player.setFlying     (tps.originalFlightState);
+				player.setFallDistance(0.0f);
+				player.setVelocity(new Vector());
+				player.resetPlayerWeather();
+				player.resetPlayerTime();
+				plugin.playStates.remove(player);
+			}
+			for(Player online : plugin.getServer().getOnlinePlayers())
+				online.showPlayer(player);
+		} catch(RuntimeException ex) {
+			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo pausing error: {0}", ex);
 		}
 	}
 	public void finishDemo(Player player)
@@ -87,29 +77,66 @@ public class TrajectoryPlayer
 			final TrajectoryPlayState tps = plugin.playStates.get(player);
 			if(tps != null)
 			{
-				player.setGameMode(tps.originalGameMode);
-				player.setAllowFlight(tps.originalFlightAllow);
-				player.setFlying(tps.originalFlightState);
-				player.setFallDistance(0.0f);
-				player.setVelocity(new Vector());
-				player.resetPlayerWeather();
-				player.resetPlayerTime();
-				plugin.getServer().getScheduler().cancelTask(tps.scheduledTaskId);
+				suspendDemo(player);
 				final int points = tps.trajectory.points.length;
 				if(points > 0)
 				{
 					player.teleport(tps.trajectory.points[points - 1].location);
 					player.saveData();
 				}
-				plugin.playStates.remove(player);
-				if(plugin.settings.getLogStartStop())
-					BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
 			}
-			for(Player online : plugin.getServer().getOnlinePlayers())
-				online.showPlayer(player);
+			if(plugin.settings.getLogStartStop())
+				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo stopping error: {0}", ex);
 		}
+	}
+	private TrajectoryPlayState prepareDemo(final Player player, final Trajectory trajectory)
+	{
+		// Cancel old demo if it was
+		finishDemo(player);
+		// Hide player from all
+		for(Player online : plugin.getServer().getOnlinePlayers())
+			online.hidePlayer(player);
+		// Start flight
+		final TrajectoryPlayState result = trajectory.newPlayState();
+		if(result.trajectory.points.length <= 0)
+		{
+			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Cannot run demo for {0}, it is empty.", player.getName());
+			throw new RuntimeException("Demo is empty.");
+		}
+		// Does this server support SPECTATOR mode?
+		result.supportSpectatorMode = false;
+		for(GameMode gm : GameMode.values())
+			if(gm.toString().equalsIgnoreCase("SPECTATOR"))
+				result.supportSpectatorMode = true;
+		// Integrate with PlaceholderAPI
+		final Plugin  placeholder = plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI");
+		result.foundPlaceholderAPI = (placeholder != null && placeholder.isEnabled());
+		// Integrate with ProtocolLib 3.6.4+ to show titles!
+		final Plugin protocolLib = plugin.getServer().getPluginManager().getPlugin("ProtocolLib");
+		result.foundProtocolLib = (protocolLib != null && protocolLib.isEnabled());
+		// Other setup
+		result.originalFlightAllow = player.getAllowFlight();
+		result.originalFlightState = player.isFlying();
+		result.originalGameMode    = player.getGameMode();
+		player.setAllowFlight(true);
+		player.setFlying(true);
+		player.setPlayerWeather(WeatherType.CLEAR);
+		if(result.supportSpectatorMode)
+			player.setGameMode(GameMode.SPECTATOR);
+		plugin.playStates.put(player, result);
+		// Schedule tick
+		result.scheduledTaskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				result.localTick += 1;
+				processDemoStep(player, result);
+			}
+		}, 1, 1);
+		return result;
 	}
 	private void processDemoStep(final Player player, final TrajectoryPlayState tps)
 	{
@@ -211,45 +238,6 @@ public class TrajectoryPlayer
 			}
 		}
 	}
-	public static void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) throws Exception
-	{
-		final com.comphenix.protocol.ProtocolManager protocolMan
-			= com.comphenix.protocol.ProtocolLibrary.getProtocolManager();
-		final com.comphenix.protocol.PacketType packetType
-			= com.comphenix.protocol.PacketType.Play.Server.TITLE;
-		// Send timings
-		final com.comphenix.protocol.events.PacketContainer pTimeTitle
-			= protocolMan.createPacket(packetType);
-		if(stay <= 0)
-			stay = 20;
-		pTimeTitle.getIntegers().
-			write(0, fadeIn).
-			write(1, stay).
-			write(2, fadeOut);
-		pTimeTitle.getTitleActions().write(0,
-			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TIMES);
-		protocolMan.sendServerPacket(player, pTimeTitle);
-		// Prepare and send subtitle
-		if("".equals(subtitle))
-			subtitle = ChatColor.RESET.toString();
-		final com.comphenix.protocol.events.PacketContainer pSubTitle
-			= protocolMan.createPacket(packetType);
-		pSubTitle.getChatComponents().write(0,
-			com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(subtitle));
-		pSubTitle.getTitleActions().write(0,
-			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
-		protocolMan.sendServerPacket(player, pSubTitle);
-		// Prepare and send title
-		if("".equals(title))
-			title = ChatColor.RESET.toString();
-		final com.comphenix.protocol.events.PacketContainer pTitle
-			= protocolMan.createPacket(packetType);
-		pTitle.getChatComponents().write(0,
-			com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(title));
-		pTitle.getTitleActions().write(0,
-			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
-		protocolMan.sendServerPacket(player, pTitle);
-	}
 	private void onMakingNextStep(final Player player, final TrajectoryPlayState tps)
 	{
 		final TrajectoryPoint tp1 = tps.trajectory.points[tps.currentPoint];
@@ -316,5 +304,44 @@ public class TrajectoryPlayer
 		if(result < -180.0f)
 			result += 360.0f;
 		return result;
+	}
+	public static void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) throws Exception
+	{
+		final com.comphenix.protocol.ProtocolManager protocolMan
+			= com.comphenix.protocol.ProtocolLibrary.getProtocolManager();
+		final com.comphenix.protocol.PacketType packetType
+			= com.comphenix.protocol.PacketType.Play.Server.TITLE;
+		// Send timings
+		final com.comphenix.protocol.events.PacketContainer pTimeTitle
+			= protocolMan.createPacket(packetType);
+		if(stay <= 0)
+			stay = 20;
+		pTimeTitle.getIntegers().
+			write(0, fadeIn).
+			write(1, stay).
+			write(2, fadeOut);
+		pTimeTitle.getTitleActions().write(0,
+			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TIMES);
+		protocolMan.sendServerPacket(player, pTimeTitle);
+		// Prepare and send subtitle
+		if("".equals(subtitle))
+			subtitle = ChatColor.RESET.toString();
+		final com.comphenix.protocol.events.PacketContainer pSubTitle
+			= protocolMan.createPacket(packetType);
+		pSubTitle.getChatComponents().write(0,
+			com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(subtitle));
+		pSubTitle.getTitleActions().write(0,
+			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
+		protocolMan.sendServerPacket(player, pSubTitle);
+		// Prepare and send title
+		if("".equals(title))
+			title = ChatColor.RESET.toString();
+		final com.comphenix.protocol.events.PacketContainer pTitle
+			= protocolMan.createPacket(packetType);
+		pTitle.getChatComponents().write(0,
+			com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(title));
+		pTitle.getTitleActions().write(0,
+			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
+		protocolMan.sendServerPacket(player, pTitle);
 	}
 }

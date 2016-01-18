@@ -405,7 +405,7 @@ public class BukkitCommands
 			case "play":
 				if(checkAdminOnly(sender))
 				{
-					Player     target;
+					Player     target     = null;
 					Trajectory trajectory = null;
 					if(args[0] != null && !"".equals(args[0]))
 					{
@@ -414,15 +414,12 @@ public class BukkitCommands
 							throw new CommandAnswerException("{_LR}Cannot find such player.");
 						if(args[1] != null && !"".equals(args[1]))
 							trajectory = plugin.trajMngr.loadTrajectory(args[1]);
-					} else {
-						target = checkPlayerOnly(sender);
 					}
 					if(target == null && sender instanceof Player)
 					{
-						final Player player = (Player)sender;
-						target = player;
-						if(plugin.playerBuffers.containsKey(player))
-							trajectory = plugin.playerBuffers.get(player);
+						target = checkPlayerOnly(sender);
+						if(plugin.playerBuffers.containsKey(target))
+							trajectory = plugin.playerBuffers.get(target);
 					}
 					if(trajectory == null)
 						trajectory = plugin.trajMngr.getFirstJoinTrajectory();
@@ -446,6 +443,34 @@ public class BukkitCommands
 					return;
 				}
 				break;
+			case "resume":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final Trajectory buffer = plugin.playerBuffers.get(player);
+					if(buffer == null || buffer.points.length == 0)
+						throw new CommandAnswerException("{_LR}Empty trajectory. Add some points first.");
+					plugin.trajectoryPlayer.resumeDemo(player, buffer);
+					return;
+				}
+				break;
+			case "pause":
+				if(checkAdminOnly(sender))
+				{
+					final Player player = checkPlayerOnly(sender);
+					final TrajectoryPlayState tps = plugin.playStates.get(player);
+					final Trajectory buffer = plugin.playerBuffers.get(player);
+					plugin.trajectoryPlayer.suspendDemo(player);
+					if(tps != null && buffer != null && buffer.equals(tps.trajectory))
+					{
+						buffer.selected = tps.currentPoint;
+						final ArrayList<String> answer = getTrajectoryProps(sender, buffer);
+						answer.add(0, "{_LG}Demo cancelled.");
+						throw new CommandAnswerException(answer);
+					}
+					throw new CommandAnswerException("{_LG}Demo cancelled.");
+				}
+				break;
 			case "draw":
 				if(checkAdminOnly(sender))
 				{
@@ -467,9 +492,13 @@ public class BukkitCommands
 				if(checkAdminOnly(sender))
 					throw new CommandAnswerException(new String[]
 					{
-						"Usage:",
-						"{YELLOW}/rscfjd play [<player> [caption]] {_LS}- start specific/first-join demo playing for you/player.",
+						"Generic commands:",
+						"{YELLOW}/rscfjd help {_LS}- show this help page.",
+						"{YELLOW}/rscfjd play [<player> [caption]] {_LS}- start specific/first-join/buffer demo for you/player.",
 						"{YELLOW}/rscfjd stop [player] {_LS}- cancel demo playing for you/player.",
+						"Trajectory editor:",
+						"{YELLOW}/rscfjd pause {_LS}- stop the demo but don\'t teleport you to the end.",
+						"{YELLOW}/rscfjd resume {_LS}- run the demo for you from the point before selected.",
 						"{YELLOW}/rscfjd add <freezeTicks> <speedAfter> [text] {_LS}- add new point after current and select it.",
 						"{YELLOW}/rscfjd select [#] {_LS}- [re]select point by id for editing and teleport you there.",
 						"{YELLOW}/rscfjd next {_LS}- select next point in your buffer.",
@@ -488,10 +517,10 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd info {_LS}- show info about server settings, your buffer and selected point.",
 						// "{YELLOW}/rscfjd draw {_LS}- toggle showing of buffered trajectory as a 3D line.",
 						"{YELLOW}/rscfjd clear {_LS}- clear your buffer",
-						"{YELLOW}/rscfjd permission [permission] {_LS}- set/clear permission required to use it by sign.",
+						"{YELLOW}/rscfjd permission [permission] {_LS}- set/clear permission required to use trajectory by sign.",
 						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file.",
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer.",
-						"{YELLOW}/rscfjd help {_LS}- show this help page.",
+						"Administrative:",
 						"{YELLOW}/rscfjd reload {_LS}- restart this plugin and reread configuration.",
 						"{YELLOW}/rscfjd update {_LS}- download and install new version.",
 					});
@@ -568,13 +597,13 @@ public class BukkitCommands
 	private ArrayList<String> getTrajectoryProps(CommandSender sender, Trajectory trajectory) throws CommandAnswerException
 	{
 		final ArrayList<String> result = new ArrayList<>();
-		result.add("Trajectory caption: " + trajectory.caption);
+		result.add("Trajectory caption: {RESET}" + trajectory.caption);
 		if(trajectory.requiredPermission != null && !"".equals(trajectory.requiredPermission))
-			result.add("Trajectory-specific permission: " + trajectory.requiredPermission);
+			result.add("Trajectory-specific permission: {RESET}" + trajectory.requiredPermission);
 		result.add("Trajectory points: {RESET}" + trajectory.points.length);
 		if(sender instanceof Player)
 		{
-			result.add("Selected point ID is #" + trajectory.getSelected() + " (in range 0..." + (trajectory.points.length - 1) + ")");
+			result.add("Selected point ID is #{RESET}" + trajectory.getSelected() + "{_LS} (in range 0..." + (trajectory.points.length - 1) + ")");
 			result.add("{_DP}Selected point info:");
 			final TrajectoryPoint point = getSelectedPoint(sender);
 			result.addAll(getPointProps(point));
