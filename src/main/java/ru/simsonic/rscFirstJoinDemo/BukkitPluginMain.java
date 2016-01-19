@@ -108,7 +108,8 @@ public final class BukkitPluginMain extends JavaPlugin implements UpdaterTarget
 			return false;
 		} catch(CommandAnswerException ex) {
 			for(String answer : ex.getMessageArray())
-				sender.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + answer));
+				if(answer != null)
+					sender.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + answer));
 		}
 		return true;
 	}

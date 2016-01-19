@@ -391,7 +391,7 @@ public class BukkitCommands
 						{
 							trajectory = plugin.playerBuffers.get((Player)sender);
 							if(trajectory != null)
-								answer.add("{_DP}Your's buffer state:");
+								answer.add("{_DP}Your buffer state:");
 							else
 								answer.add("Your have no trajectory points in your buffer");
 						} else
@@ -418,8 +418,9 @@ public class BukkitCommands
 					if(target == null && sender instanceof Player)
 					{
 						target = checkPlayerOnly(sender);
-						if(plugin.playerBuffers.containsKey(target))
-							trajectory = plugin.playerBuffers.get(target);
+						final Trajectory buffer = plugin.playerBuffers.get(target);
+						if(buffer != null && buffer.points.length > 0)
+							trajectory = buffer;
 					}
 					if(trajectory == null)
 						trajectory = plugin.trajMngr.getFirstJoinTrajectory();
@@ -540,9 +541,12 @@ public class BukkitCommands
 			case "update":
 				if(checkAdminOnly(sender))
 				{
-					plugin.updating.onDoUpdate(sender);
-					if(sender instanceof Player)
-						throw new CommandAnswerException("{_LG}Done.");
+					if("do".equals(args[0]))
+					{
+						plugin.updating.doUpdate(sender);
+					} else {
+						plugin.updating.checkUpdate(sender instanceof Player ? (Player)sender : null);
+					}
 					return;
 				}
 				break;
