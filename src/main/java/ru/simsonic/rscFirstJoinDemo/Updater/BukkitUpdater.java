@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -121,11 +122,13 @@ public final class BukkitUpdater implements Listener
 				// CONSOLE
 				final ConsoleCommandSender console = plugin.getServer().getConsoleSender();
 				for(String line : lines)
-					console.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+					if(line != null)
+						console.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
 				// PLAYERS
 				for(Player online : staff)
 					for(String line : lines)
-						online.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+						if(line != null)
+							online.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
 				notify();
 			}
 		};
@@ -161,7 +164,8 @@ public final class BukkitUpdater implements Listener
 			final ArrayList<String> lines = latestToLines();
 			if(lines != null)
 				for(String line : lines)
-					player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+					if(line != null)
+						player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
 		}
 	}
 	@EventHandler
@@ -230,9 +234,13 @@ public final class BukkitUpdater implements Listener
 	private void installUpdate()
 	{
 		// RENAME OLD VERSION
-		final String outdatedJarPath = plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toString();
-		final File outdatedJarSrc = new File(outdatedJarPath);
-		final File outdatedJarDst = new File(outdatedJarPath + "-outdated");
-		outdatedJarSrc.renameTo(outdatedJarDst);
+		try
+		{
+			final String outdatedJarPath = plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+			final File outdatedJarSrc = new File(outdatedJarPath);
+			final File outdatedJarDst = new File(outdatedJarPath + "-outdated");
+			outdatedJarSrc.renameTo(outdatedJarDst);
+		} catch(URISyntaxException ex) {
+		}
 	}
 }
