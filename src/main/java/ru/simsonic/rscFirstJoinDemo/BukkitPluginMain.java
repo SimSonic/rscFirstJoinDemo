@@ -3,6 +3,7 @@ package ru.simsonic.rscFirstJoinDemo;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,7 +27,7 @@ import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
 
-public final class BukkitPluginMain extends JavaPlugin implements UpdaterTarget
+public final class BukkitPluginMain extends JavaPlugin
 {
 	public final static Logger  consoleLog = Bukkit.getLogger();
 	public final BukkitUpdater  updating = new BukkitUpdater(this, Settings.updaterURL);
@@ -52,7 +53,10 @@ public final class BukkitPluginMain extends JavaPlugin implements UpdaterTarget
 		updating.onEnable();
 		for(Player online : Tools.getOnlinePlayers())
 			if(online.hasPermission("rscfjd.admin"))
-				updating.onAdminJoin(online);
+			{
+				listener.restorePlayerBuffer(online);
+				updating.onAdminJoin(online, false);
+			}
 		// Create directory for player playerBuffers
 		new File(getDataFolder(), "buffers").mkdirs();
 		trajMngr.setFirstJoinTrajectoryCaption(settings.getFirstJoinTrajectory());
@@ -76,23 +80,13 @@ public final class BukkitPluginMain extends JavaPlugin implements UpdaterTarget
 		getServer().getScheduler().cancelTasks(this);
 		for(Player demo : playStates.keySet())
 			trajectoryPlayer.finishDemo(demo);
+		for(Map.Entry<Player, Trajectory> entry : playerBuffers.entrySet())
+			trajMngr.saveBufferTrajectory(entry.getValue(), entry.getKey());
 		playerBuffers.clear();
 		playStates.clear();
 		trajMngr.clear();
 		metrics = null;
 		consoleLog.info("[rscfjd] rscFirstJoinDemo has been disabled.");
-	}
-	@Override
-	public void informAboutUpdate(Set<Player> players, Latest latest)
-	{
-		// CONSOLE
-		final ConsoleCommandSender console = getServer().getConsoleSender();
-		for(String message : latest.notes)
-			console.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + message));
-		// ONLINE ADMINS
-		for(Player player : players)
-			for(String message : latest.notes)
-				player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + message));
 	}
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)

@@ -34,9 +34,6 @@ public class BukkitListener implements Listener
 		// Hide all other demo players
 		for(Player demo : plugin.playStates.keySet())
 			player.hidePlayer(demo);
-		// Inform admins about updates
-		if(player.hasPermission("rscfjd.admin"))
-			plugin.updating.onAdminJoin(player);
 		// Plan other actions after some little delay
 		final int delay = plugin.settings.getFirstJoinDelay();
 		plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable()
@@ -44,6 +41,9 @@ public class BukkitListener implements Listener
 			@Override
 			public void run()
 			{
+				// Inform admins about updates
+				if(player.hasPermission("rscfjd.admin"))
+					plugin.updating.onAdminJoin(player, true);
 				// Check if first-join trajectory is enabled for all
 				if(plugin.settings.getFirstJoinEnabled())
 				{
@@ -66,18 +66,20 @@ public class BukkitListener implements Listener
 				}
 				// Check if he is admin so we need to restore his buffer
 				if(player.hasPermission("rscfjd.admin"))
-				{
-					final Trajectory buffer = plugin.trajMngr.loadBufferTrajectory(player);
-					if(buffer.points.length > 0)
-					{
-						plugin.setBufferedTrajectory(player, buffer);
-						plugin.commands.setSelectedPoint(player, buffer, buffer.points.length - 1, false);
-						player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix
-							+ "Your buffer has been restored, selected last point of " + buffer.points.length + " total."));
-					}
-				}
+					restorePlayerBuffer(player);
 			}
 		}, delay);
+	}
+	public void restorePlayerBuffer(Player player)
+	{
+		final Trajectory buffer = plugin.trajMngr.loadBufferTrajectory(player);
+		if(buffer.points.length > 0)
+		{
+			plugin.setBufferedTrajectory(player, buffer);
+			plugin.commands.setSelectedPoint(player, buffer, buffer.points.length - 1, false);
+			player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix
+				+ "Your buffer has been restored, selected last point of " + buffer.points.length + " total."));
+		}
 	}
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event)

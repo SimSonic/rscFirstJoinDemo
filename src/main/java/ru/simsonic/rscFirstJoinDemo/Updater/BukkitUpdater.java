@@ -13,9 +13,9 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Set;
-import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,15 +28,13 @@ import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
 public final class BukkitUpdater implements Listener
 {
-	private final JavaPlugin        plugin;
-	private final String            updateInfoURL;
-	private final HashSet<Player>   adminsToInform = new HashSet<>();
-	private final HashSet<Player>   whoCalls       = new HashSet<>();
-	private Latest latest = new Latest();
-	public BukkitUpdater(JavaPlugin plugin, String latestJsonURL)
+	private final JavaPlugin      plugin;
+	private final String          latestURL;
+	private final HashSet<Player> staff = new HashSet<>();
+	public BukkitUpdater(JavaPlugin plugin, String latestURL)
 	{
-		this.plugin = plugin;
-		this.updateInfoURL = latestJsonURL;
+		this.plugin    = plugin;
+		this.latestURL = latestURL;
 	}
 	public void onEnable()
 	{
@@ -46,18 +44,14 @@ public final class BukkitUpdater implements Listener
 	public void checkUpdate(Player sender)
 	{
 		if(sender != null)
-			whoCalls.add(sender);
+			staff.add(sender);
 		threadCheck.start();
 	}
-	public void doUpdate(CommandSender sender)
+	public void doUpdate(Player sender)
 	{
-		if(downloadUpdate())
-		{
-			// SUCCESS
-			renameOldFile();
-		} else {
-			// FAILED
-		}
+		if(sender != null)
+			staff.add(sender);
+		threadUpdate.start();
 	}
 	private final RestartableThread threadCheck = new RestartableThread()
 	{
@@ -65,17 +59,11 @@ public final class BukkitUpdater implements Listener
 		public void run()
 		{
 			checkForUpdate();
-			plugin.getServer().getScheduler().runTask(plugin, new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					final ArrayList<String> lines = latestToNotify();
-					for(Player online : adminsToInform)
-						for(String line : lines)
-							online.sendMessage(line);
-				}
-			});
+			final ArrayList<String> lines = latestToLines();
+			if(lines != null)
+				runLines(lines.toArray(new String[lines.size()]));
+			else
+				runLine("You are using the latest version.");
 		}
 	};
 	private final RestartableThread threadUpdate = new RestartableThread()
@@ -83,14 +71,32 @@ public final class BukkitUpdater implements Listener
 		@Override
 		public void run()
 		{
+			runLine("Downloading update...");
+			if(downloadUpdate())
+			{
+				// SUCCESS
+				runLine("Installing update...");
+				installUpdate();
+				runLines(new String[]
+				{
+					"{_LG}Installation complete!",
+					"Please restart your server to avoid errors.",
+				});
+			} else {
+				// FAILED
+				runLines(new String[] {
+					"{_LR}Downloading error!",
+					"Cannot download update file. Please try later.",
+				});
+			}
 		}
 	};
+	private Latest latest = new Latest();
 	private void checkForUpdate()
 	{
 		try
 		{
-			this.latest = new Gson().fromJson(downloadJson(updateInfoURL), Latest.class);
-			System.out.println(this.latest);
+			this.latest = new Gson().fromJson(downloadJson(latestURL), Latest.class);
 		} catch(IOException ex) {
 			this.latest = new Latest();
 		}
@@ -98,41 +104,75 @@ public final class BukkitUpdater implements Listener
 			latest.note = "New version: " + latest.version;
 		if(latest.notes == null)
 			latest.notes = new String[] { latest.note };
+		if(latest.version == null)
+			latest.version = plugin.getDescription().getVersion();
 	}
-	private ArrayList<String> latestToNotify()
+	private void runLine(final String line)
 	{
-		final ArrayList<String> result = new ArrayList<>();
-		if(plugin.getDescription().getVersion().equals(latest.version))
+		runLines(new String[] { line });
+	}
+	private void runLines(final String[] lines)
+	{
+		final Runnable syncTask = new Runnable()
 		{
-			// THERE IS NO UPDATE
-			result.add(GenericChatCodes.processStringStatic(Settings.chatPrefix
-				+ "{_LS}You are using the latest version."));
-		} else {
-			// THERE IS AN UPDATE
-			result.add(GenericChatCodes.processStringStatic(Settings.chatPrefix
-				+ "{_LS}Newer version {_LG}" + latest.version + "{_LS} is available:"));
-			for(String note : latest.notes)
-				result.add(GenericChatCodes.processStringStatic(Settings.chatPrefix + note));
-			result.add(GenericChatCodes.processStringStatic(Settings.chatPrefix
-				+ "{_LS}Apply this update with command {GOLD}/rscfjd update do"));
-			// SEND TO ALL ADMINS
-			whoCalls.addAll(adminsToInform);
+			@Override
+			public synchronized void run()
+			{
+				// CONSOLE
+				final ConsoleCommandSender console = plugin.getServer().getConsoleSender();
+				for(String line : lines)
+					console.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+				// PLAYERS
+				for(Player online : staff)
+					for(String line : lines)
+						online.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+				notify();
+			}
+		};
+		try
+		{
+			synchronized(syncTask)
+			{
+				plugin.getServer().getScheduler().runTask(plugin, syncTask);
+				syncTask.wait();
+			}
+		} catch(InterruptedException ex) {
 		}
+	}
+	private ArrayList<String> latestToLines()
+	{
+		// THERE IS NO UPDATE
+		if(plugin.getDescription().getVersion().equals(latest.version))
+			return null;
+		// THERE IS AN UPDATE
+		final ArrayList<String> result = new ArrayList<>();
+		result.add("New "
+			+ (latest.snapshot ? "{_DS}snapshot {_LS}" : "{_WH}release {_LS}")
+			+ "version {_LG}" + latest.version + "{_LS} is available!");
+		result.addAll(Arrays.asList(latest.notes));
+		result.add("Apply this update with command {GOLD}/rscfjd update do");
 		return result;
 	}
-	public void onAdminJoin(Player player)
+	public void onAdminJoin(Player player, boolean fromEvent)
 	{
-		adminsToInform.add(player);
+		staff.add(player);
+		if(fromEvent)
+		{
+			final ArrayList<String> lines = latestToLines();
+			if(lines != null)
+				for(String line : lines)
+					player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+		}
 	}
 	@EventHandler
 	protected void onPlayerQuit(PlayerQuitEvent event)
 	{
-		adminsToInform.add(event.getPlayer());
+		staff.add(event.getPlayer());
 	}
 	@EventHandler
 	protected void onPlayerKick(PlayerKickEvent event)
 	{
-		adminsToInform.add(event.getPlayer());
+		staff.add(event.getPlayer());
 	}
 	private static String downloadJson(String url) throws IOException
 	{
@@ -187,7 +227,7 @@ public final class BukkitUpdater implements Listener
 		}
 		return false;
 	}
-	private void renameOldFile()
+	private void installUpdate()
 	{
 		// RENAME OLD VERSION
 		final String outdatedJarPath = plugin.getClass().getProtectionDomain().getCodeSource().getLocation().toString();

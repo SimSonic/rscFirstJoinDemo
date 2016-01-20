@@ -543,7 +543,7 @@ public class BukkitCommands
 				{
 					if("do".equals(args[0]))
 					{
-						plugin.updating.doUpdate(sender);
+						plugin.updating.doUpdate(sender instanceof Player ? (Player)sender : null);
 					} else {
 						plugin.updating.checkUpdate(sender instanceof Player ? (Player)sender : null);
 					}
