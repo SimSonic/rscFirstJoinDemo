@@ -62,6 +62,7 @@ public class TrajectoryMngr
 		final File trajectoryFile = new File(plugin.getDataFolder(), caption.toLowerCase() + ".json");
 		try
 		{
+			trajectory.caption = caption;
 			saveTrajectoryFile(trajectory, trajectoryFile);
 			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} has been saved ({1})",
 				new Object[] { caption, trajectory.points.length });

@@ -523,7 +523,7 @@ public class BukkitCommands
 						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer.",
 						"Administrative:",
 						"{YELLOW}/rscfjd reload {_LS}- restart this plugin and reread configuration.",
-						"{YELLOW}/rscfjd update {_LS}- download and install new version.",
+						"{YELLOW}/rscfjd update [do]{_LS}- download and install new version.",
 					});
 				break;
 			case "reload":
