@@ -84,9 +84,9 @@ public class TrajectoryPlayer
 					player.teleport(tps.trajectory.points[points - 1].location);
 					player.saveData();
 				}
+				if(plugin.settings.getLogStartStop())
+					BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
 			}
-			if(plugin.settings.getLogStartStop())
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo stopping error: {0}", ex);
 		}

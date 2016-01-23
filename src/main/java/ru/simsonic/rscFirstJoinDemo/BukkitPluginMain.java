@@ -47,6 +47,8 @@ public final class BukkitPluginMain extends JavaPlugin
 	{
 		settings.onEnable();
 		updating.onEnable();
+		Phrases.extractTranslations(this.getDataFolder());
+		Phrases.fill(this, settings.getLanguage());
 		for(Player online : Tools.getOnlinePlayers())
 			if(online.hasPermission("rscfjd.admin"))
 			{

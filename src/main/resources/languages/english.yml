@@ -1,0 +1,16 @@
+generic:
+  enabled:  "rscFirstJoinDemo has been successfully enabled."
+  disabled: "rscFirstJoinDemo has been disabled."
+  reloaded: "rscFirstJoinDemo has been reloaded."
+  plib-y:   "ProtocolLib was found and integrated."
+  plib-n  : "ProtocolLib wasn't found."
+commands:
+  help:
+    usage:  "help"
+    info:   "Shows all available commands."
+  reload:
+    usage:  "reload"
+    info:   "Disables and reenables plugin."
+  update:
+    usage:  "update [do]"
+    info:   "Checks for a newer version or installs it (if \'do\' is specified)"

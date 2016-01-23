@@ -47,6 +47,13 @@ public class BukkitSettings implements Settings
 				config.set("internal.version", 3);
 				plugin.saveConfig();
 			case 3:
+				BukkitPluginMain.consoleLog.info("Updating config.yml version (v3 -> v4).");
+				// NEW NODE
+				config.set("settings.language", "english");
+				// FINISH
+				config.set("internal.version", 4);
+				plugin.saveConfig();
+			case 4:
 				// NEWEST VERSION
 				break;
 			default:
@@ -110,6 +117,15 @@ public class BukkitSettings implements Settings
 		final FileConfiguration config = plugin.getConfig();
 		final boolean result = config.getBoolean("settings.log.player-point-reached", false);
 		config.set("settings.log.player-point-reached", result);
+		plugin.saveConfig();
+		return result;
+	}
+	@Override
+	public String getLanguage()
+	{
+		final FileConfiguration config = plugin.getConfig();
+		final String result = config.getString("settings.language", "english");
+		config.set("settings.language", result);
 		plugin.saveConfig();
 		return result;
 	}

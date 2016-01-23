@@ -13,6 +13,7 @@ public interface Settings
 	public void onLoad();
 	public void onEnable();
 	
+	public String  getLanguage();
 	public String  getFirstJoinTrajectory();
 	public boolean getFirstJoinEnabled();
 	public int     getFirstJoinDelay();

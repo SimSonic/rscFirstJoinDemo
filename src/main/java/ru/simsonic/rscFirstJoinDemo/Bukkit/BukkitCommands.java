@@ -14,7 +14,8 @@ import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
 
 public class BukkitCommands
 {
-	private final BukkitPluginMain plugin;
+	final BukkitPluginMain plugin;
+	private final CommandHelp cmdHelp = new CommandHelp(this, "help");
 	public BukkitCommands(BukkitPluginMain plugin)
 	{
 		this.plugin = plugin;
@@ -490,41 +491,7 @@ public class BukkitCommands
 				}
 				break;
 			case "help":
-				if(checkAdminOnly(sender))
-					throw new CommandAnswerException(new String[]
-					{
-						"Generic commands:",
-						"{YELLOW}/rscfjd help {_LS}- show this help page.",
-						"{YELLOW}/rscfjd play [<player> [caption]] {_LS}- start specific/first-join/buffer demo for you/player.",
-						"{YELLOW}/rscfjd stop [player] {_LS}- cancel demo playing for you/player.",
-						"Trajectory editor:",
-						"{YELLOW}/rscfjd pause {_LS}- stop the demo but don\'t teleport you to the end.",
-						"{YELLOW}/rscfjd resume {_LS}- run the demo for you from the point before selected.",
-						"{YELLOW}/rscfjd add <freezeTicks> <speedAfter> [text] {_LS}- add new point after current and select it.",
-						"{YELLOW}/rscfjd select [#] {_LS}- [re]select point by id for editing and teleport you there.",
-						"{YELLOW}/rscfjd next {_LS}- select next point in your buffer.",
-						"{YELLOW}/rscfjd prev {_LS}- select previous point in your buffer.",
-						"{YELLOW}/rscfjd position {_LS}- update selected point with your location.",
-						"{YELLOW}/rscfjd freeze <ticks> {_LS}- update freezeTicks when reach selected point.",
-						"{YELLOW}/rscfjd speed <blocksPerSec> {_LS}- update speed after selected point. Zero means teleport.",
-						"{YELLOW}/rscfjd text [text] {_LS}- update messageOnReach of selected point.",
-						"{YELLOW}/rscfjd titletime <ticks> {_LS}- update showTitleTicks of selected point.",
-						"{YELLOW}/rscfjd title [text] {_LS}- update showTitle of selected point.",
-						"{YELLOW}/rscfjd subtitle [text] {_LS}- update showSubtitle of selected point.",
-						"{YELLOW}/rscfjd time <reset|lock <value|now>|unlock <value|now>> {_LS}- setup point's time.",
-						"{YELLOW}/rscfjd weather <reset|sunny|stormy> {_LS}- setup point's weather.",
-						"{YELLOW}/rscfjd merge <caption> {_LS}- add another trajectory to the end of your buffer.",
-						"{YELLOW}/rscfjd delete {_LS}- remove selected point.",
-						"{YELLOW}/rscfjd info {_LS}- show info about server settings, your buffer and selected point.",
-						// "{YELLOW}/rscfjd draw {_LS}- toggle showing of buffered trajectory as a 3D line.",
-						"{YELLOW}/rscfjd clear {_LS}- clear your buffer",
-						"{YELLOW}/rscfjd permission [permission] {_LS}- set/clear permission required to use trajectory by sign.",
-						"{YELLOW}/rscfjd save [caption] {_LS}- save your buffer into file.",
-						"{YELLOW}/rscfjd load [caption] {_LS}- load file into your buffer.",
-						"Administrative:",
-						"{YELLOW}/rscfjd reload {_LS}- restart this plugin and reread configuration.",
-						"{YELLOW}/rscfjd update [do]{_LS}- download and install new version.",
-					});
+				cmdHelp.execute(sender, args);
 				break;
 			case "reload":
 				if(checkAdminOnly(sender))
@@ -555,22 +522,6 @@ public class BukkitCommands
 		}
 		throw new CommandAnswerException("{_LR}Not enough permissions.");
 	}
-	private boolean checkAdminOnly(CommandSender sender) throws CommandAnswerException
-	{
-		if(!sender.hasPermission("rscfjd.admin"))
-			throw new CommandAnswerException("{_LR}Not enough permissions.");
-		return true;
-	}
-	private Player checkPlayerOnly(CommandSender sender) throws CommandAnswerException
-	{
-		if(!(sender instanceof Player))
-			throw new CommandAnswerException("{_LR}This command cannot be run from console.");
-		return (Player)sender;
-	}
-	public ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID)
-	{
-		return setSelectedPoint(player, buffer, pointID, true);
-	}
 	public ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID, boolean teleport)
 	{
 		buffer.setSelected(pointID);
@@ -589,7 +540,23 @@ public class BukkitCommands
 		result.addAll(getPointProps(buffer.getSelectedPoint()));
 		return result;
 	}
-	private TrajectoryPoint getSelectedPoint(CommandSender sender) throws CommandAnswerException
+	boolean checkAdminOnly(CommandSender sender) throws CommandAnswerException
+	{
+		if(!sender.hasPermission("rscfjd.admin"))
+			throw new CommandAnswerException("{_LR}Not enough permissions.");
+		return true;
+	}
+	Player checkPlayerOnly(CommandSender sender) throws CommandAnswerException
+	{
+		if(!(sender instanceof Player))
+			throw new CommandAnswerException("{_LR}This command cannot be run from console.");
+		return (Player)sender;
+	}
+	ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID)
+	{
+		return setSelectedPoint(player, buffer, pointID, true);
+	}
+	TrajectoryPoint getSelectedPoint(CommandSender sender) throws CommandAnswerException
 	{
 		final Player player = checkPlayerOnly(sender);
 		final Trajectory buffer = plugin.playerBuffers.get(player);
@@ -598,7 +565,7 @@ public class BukkitCommands
 			throw new CommandAnswerException("{_LR}Your buffer is empty! Add some points first!");
 		return result;
 	}
-	private ArrayList<String> getTrajectoryProps(CommandSender sender, Trajectory trajectory) throws CommandAnswerException
+	ArrayList<String> getTrajectoryProps(CommandSender sender, Trajectory trajectory) throws CommandAnswerException
 	{
 		final ArrayList<String> result = new ArrayList<>();
 		result.add("Trajectory caption: {RESET}" + trajectory.caption);
@@ -614,7 +581,7 @@ public class BukkitCommands
 		}
 		return result;
 	}
-	private ArrayList<String> getPointProps(TrajectoryPoint point)
+	ArrayList<String> getPointProps(TrajectoryPoint point)
 	{
 		final ArrayList<String> result = new ArrayList<>();
 		if(point != null)
