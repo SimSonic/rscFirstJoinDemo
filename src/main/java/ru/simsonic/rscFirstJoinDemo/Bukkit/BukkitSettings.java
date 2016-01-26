@@ -48,6 +48,8 @@ public class BukkitSettings implements Settings
 				plugin.saveConfig();
 			case 3:
 				BukkitPluginMain.consoleLog.info("Updating config.yml version (v3 -> v4).");
+				// FIX MY OLD MISTAKE ('logging' node was named 'log')
+				config.set("settings.log", null);
 				// NEW NODE
 				config.set("settings.language", "english");
 				// FINISH
@@ -106,8 +108,8 @@ public class BukkitSettings implements Settings
 	public boolean getLogStartStop()
 	{
 		final FileConfiguration config = plugin.getConfig();
-		final boolean result = config.getBoolean("settings.log.player-start-stop", true);
-		config.set("settings.log.player-start-stop", result);
+		final boolean result = config.getBoolean("settings.logging.player-start-stop", true);
+		config.set("settings.logging.player-start-stop", result);
 		plugin.saveConfig();
 		return result;
 	}
@@ -115,8 +117,8 @@ public class BukkitSettings implements Settings
 	public boolean getLogPointReached()
 	{
 		final FileConfiguration config = plugin.getConfig();
-		final boolean result = config.getBoolean("settings.log.player-point-reached", false);
-		config.set("settings.log.player-point-reached", result);
+		final boolean result = config.getBoolean("settings.logging.player-point-reached", false);
+		config.set("settings.logging.player-point-reached", result);
 		plugin.saveConfig();
 		return result;
 	}
