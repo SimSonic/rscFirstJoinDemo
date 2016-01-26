@@ -15,7 +15,8 @@ import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
 public class BukkitCommands
 {
 	final BukkitPluginMain plugin;
-	private final CommandHelp cmdHelp = new CommandHelp(this, "help");
+	private final CommandHelp   cmdHelp   = new CommandHelp  (this, "help");
+	private final CommandReload cmdReload = new CommandReload(this, "reload");
 	public BukkitCommands(BukkitPluginMain plugin)
 	{
 		this.plugin = plugin;
@@ -33,7 +34,7 @@ public class BukkitCommands
 				{
 					final Player player = checkPlayerOnly(sender);
 					final Trajectory buffer = (args[0] != null && !"".equals(args[0]))
-						? plugin.trajMngr.loadTrajectory(args[0])
+						? plugin.trajMngr.loadTrajectory(args[0], true)
 						: plugin.trajMngr.loadBufferTrajectory(player);
 					plugin.setBufferedTrajectory(player, buffer);
 					if(buffer.points.length > 0)
@@ -55,7 +56,7 @@ public class BukkitCommands
 						plugin.trajMngr.saveTrajectory(trajectory, args[0]);
 						throw new CommandAnswerException("Saved {_LC}" + args[0] + ".json{_LG}.");
 					}
-					plugin.trajMngr.saveBufferTrajectory(trajectory, player);
+					plugin.trajMngr.saveBufferTrajectory(player, trajectory);
 					throw new CommandAnswerException("Buffer successfully saved.");
 				}
 				break;
@@ -64,7 +65,6 @@ public class BukkitCommands
 				{
 					final Player player = checkPlayerOnly(sender);
 					final Trajectory buffer = new Trajectory();
-					buffer.points = new TrajectoryPoint[] {};
 					plugin.setBufferedTrajectory(player, buffer);
 					throw new CommandAnswerException("{_LG}Buffer cleared.");
 				}
@@ -344,7 +344,7 @@ public class BukkitCommands
 					final Trajectory buffer = plugin.getBufferedTrajectory(player);
 					if(args[0] != null && !"".equals(args[0]))
 					{
-						final Trajectory merged = plugin.trajMngr.loadTrajectory(args[0]);
+						final Trajectory merged = plugin.trajMngr.loadTrajectory(args[0], false);
 						final ArrayList<TrajectoryPoint> newPoints = new ArrayList<>();
 						newPoints.addAll(Arrays.asList(buffer.points));
 						newPoints.addAll(Arrays.asList(merged.points));
@@ -375,24 +375,21 @@ public class BukkitCommands
 					Trajectory trajectory = null;
 					if(args[0] != null && !"".equals(args[0]))
 					{
-						trajectory = plugin.trajMngr.loadTrajectory(args[0]);
+						trajectory = plugin.trajMngr.loadTrajectory(args[0], false);
 						if(trajectory == null)
 							answer.add("{_LR}There is no trajectory with this name: " + args[0]);
 					}
-					final String  firstJoinCaption = plugin.settings.getFirstJoinTrajectory();
-					final boolean firstJoinLoaded  = plugin.trajMngr.contains(firstJoinCaption);
+					final String firstJoinCaption = plugin.settings.getFirstJoinTrajectory();
 					answer.add("{_DP}Server configuration:");
 					answer.add("first-join-trajectory: {_R}" + firstJoinCaption);
-					answer.add("first-join-trajectory is " + (firstJoinLoaded ? "{_DG}already loaded" : "{_DR}not loaded yet"));
-					if(firstJoinLoaded)
-						answer.add("first-join-trajectory contains points: {_R}" + plugin.trajMngr.get(firstJoinCaption).points.length);
+					answer.add("first-join-trajectory total points: {_R}" + plugin.trajMngr.getFirstJoinTrajectory().points.length);
 					if(trajectory == null)
 					{
 						if(sender instanceof Player)
 						{
 							trajectory = plugin.playerBuffers.get((Player)sender);
 							if(trajectory != null)
-								answer.add("{_DP}Your buffer state:");
+								answer.add("{_DP}Personal buffer state:");
 							else
 								answer.add("Your have no trajectory points in your buffer");
 						} else
@@ -414,7 +411,7 @@ public class BukkitCommands
 						if(target == null)
 							throw new CommandAnswerException("{_LR}Cannot find such player.");
 						if(args[1] != null && !"".equals(args[1]))
-							trajectory = plugin.trajMngr.loadTrajectory(args[1]);
+							trajectory = plugin.trajMngr.loadTrajectory(args[1], false);
 					}
 					if(target == null && sender instanceof Player)
 					{
@@ -494,16 +491,7 @@ public class BukkitCommands
 				cmdHelp.execute(sender, args);
 				break;
 			case "reload":
-				if(checkAdminOnly(sender))
-				{
-					plugin.reloadConfig();
-					plugin.getPluginLoader().disablePlugin(plugin);
-					plugin.getPluginLoader().enablePlugin(plugin);
-					plugin.getServer().getConsoleSender().sendMessage("[rscfjd] rscFirstJoinDemo has been reloaded.");
-					if(sender instanceof Player)
-						throw new CommandAnswerException("{_LG}Plugin has been reloaded.");
-					return;
-				}
+				cmdReload.execute(sender, args);
 				break;
 			case "update":
 				if(checkAdminOnly(sender))

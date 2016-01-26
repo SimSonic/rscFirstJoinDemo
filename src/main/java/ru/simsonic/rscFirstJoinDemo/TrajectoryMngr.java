@@ -16,25 +16,28 @@ public class TrajectoryMngr
 {
 	private final BukkitPluginMain plugin;
 	private final HashMap<String, Trajectory> trajectories = new HashMap<>();
-	public String firstJoinTrajectory = Settings.defaultFirstJoinTrajectory;
 	public TrajectoryMngr(BukkitPluginMain plugin)
 	{
 		this.plugin = plugin;
 	}
 	public Trajectory getFirstJoinTrajectory()
 	{
-		if(trajectories.containsKey(firstJoinTrajectory) == false)
-			loadTrajectory(firstJoinTrajectory);
-		return trajectories.get(firstJoinTrajectory);
+		return loadTrajectory(plugin.settings.getFirstJoinTrajectory(), false);
 	}
-	public Trajectory loadTrajectory(String caption)
+	public Trajectory loadTrajectory(String caption, boolean forceReload)
 	{
-		final File trajectoryFile = new File(plugin.getDataFolder(), caption.toLowerCase() + ".json");
-		final Trajectory result = loadTrajectoryFile(trajectoryFile);
+		final String lowerCaption = caption.toLowerCase();
+		// IS IT ALREADY IN CACHE?
+		Trajectory result = trajectories.get(lowerCaption);
+		if(!forceReload && result != null)
+			return result;
+		// LOAD FROM FILE
+		final File trajectoryFile = new File(plugin.getDataFolder(), lowerCaption + ".json");
+		result = loadTrajectoryFile(trajectoryFile, true);
 		result.caption = caption;
 		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} contains ({1} points)",
 			new Object[] { caption, result.points.length });
-		trajectories.put(caption, result);
+		trajectories.put(lowerCaption, result);
 		return result;
 	}
 	public Trajectory loadBufferTrajectory(Player player)
@@ -46,20 +49,23 @@ public class TrajectoryMngr
 		} catch(RuntimeException ex) {
 			// Pre-1.7 servers
 		}
+		final String lowerCaption = caption.toLowerCase();
 		final File buffersDir = new File(plugin.getDataFolder(), "buffers");
-		final File trajectoryFile = new File(buffersDir, caption.toLowerCase() + ".json");
-		final Trajectory result = loadTrajectoryFile(trajectoryFile);
+		final File trajectoryFile = new File(buffersDir, lowerCaption + ".json");
+		final Trajectory result = loadTrajectoryFile(trajectoryFile, false);
 		result.caption = caption;
 		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} contains ({1} points)",
 			new Object[] { caption, result.points.length });
-		trajectories.put(caption, result);
+		trajectories.put(lowerCaption, result);
 		return result;
 	}
 	public void saveTrajectory(Trajectory trajectory, String caption)
 	{
 		if(trajectory == null)
 			return;
-		final File trajectoryFile = new File(plugin.getDataFolder(), caption.toLowerCase() + ".json");
+		final String lowerCaption = caption.toLowerCase();
+		trajectories.put(lowerCaption, trajectory);
+		final File trajectoryFile = new File(plugin.getDataFolder(), lowerCaption + ".json");
 		try
 		{
 			trajectory.caption = caption;
@@ -69,8 +75,10 @@ public class TrajectoryMngr
 		} catch(IOException ex) {
 		}
 	}
-	public void saveBufferTrajectory(Trajectory trajectory, Player player)
+	public void saveBufferTrajectory(Player player, Trajectory trajectory)
 	{
+		if(trajectory == null)
+			return;
 		String caption = player.getName();
 		try
 		{
@@ -78,8 +86,10 @@ public class TrajectoryMngr
 		} catch(RuntimeException ex) {
 			// Pre-1.7 servers
 		}
+		final String lowerCaption = caption.toLowerCase();
+		trajectories.put(lowerCaption, trajectory);
 		final File buffersDir = new File(plugin.getDataFolder(), "buffers");
-		final File trajectoryFile = new File(buffersDir, caption.toLowerCase() + ".json");
+		final File trajectoryFile = new File(buffersDir, lowerCaption + ".json");
 		try
 		{
 			saveTrajectoryFile(trajectory, trajectoryFile);
@@ -88,19 +98,7 @@ public class TrajectoryMngr
 		} catch(IOException ex) {
 		}
 	}
-	public void setFirstJoinTrajectoryCaption(String caption)
-	{
-		this.firstJoinTrajectory = caption;
-	}
-	public boolean contains(String caption)
-	{
-		return trajectories.containsKey(caption);
-	}
-	public Trajectory get(String caption)
-	{
-		return trajectories.get(caption);
-	}
-	public void clear()
+	public void onDisable()
 	{
 		trajectories.clear();
 	}
@@ -117,19 +115,22 @@ public class TrajectoryMngr
 			throw ex;
 		}
 	}
-	private Trajectory loadTrajectoryFile(File file)
+	private Trajectory loadTrajectoryFile(File file, boolean verbose)
 	{
 		Trajectory result;
 		try
 		{
 			result = HashAndCipherUtilities.loadObject(file, Trajectory.class);
 		} catch(IOException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Error reading {0}: {1}",
-				new Object[] { file.toString(), ex });
+			if(verbose)
+				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Error reading {0}: {1}",
+					new Object[] { file.toString(), ex });
 			result = new Trajectory();
 		}
 		if(result.points == null)
 			result.points = new TrajectoryPoint[] {};
+		if(result.caption == null)
+			result.caption = file.getName().replace(".json", "");
 		for(TrajectoryPoint tp : result.points)
 			tp.location = locationForTrajectoryPoint(tp);
 		return result;

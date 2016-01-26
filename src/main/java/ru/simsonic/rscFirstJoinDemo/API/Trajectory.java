@@ -4,12 +4,12 @@ import ru.simsonic.rscFirstJoinDemo.Bukkit.TrajectoryPlayState;
 public class Trajectory
 {
 	// Saveable data
-	public TrajectoryPoint[] points = new TrajectoryPoint[] {};
-	public String requiredPermission;
+	public TrajectoryPoint[] points  = new TrajectoryPoint[] {};
+	public String requiredPermission = null;
 	// Transient data
-	public transient String  caption;
-	public transient int     selected;
-	public transient boolean drawSketch;
+	public transient String  caption    = "unnamed";
+	public transient int     selected   = 0;
+	public transient boolean drawSketch = false;
 	public Trajectory()
 	{
 	}

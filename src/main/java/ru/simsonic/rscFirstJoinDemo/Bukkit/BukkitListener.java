@@ -53,8 +53,6 @@ public class BukkitListener implements Listener
 						// Check if the player is admin
 						if(player.hasPermission("rscfjd.admin"))
 						{
-							player.sendMessage(GenericChatCodes.processStringStatic(
-								Settings.chatPrefix + "You have skipped demo due to having admin permission."));
 							BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Skipping player {0} due to admin permission.", player.getName());
 						} else {
 							// Let's start it
@@ -66,20 +64,9 @@ public class BukkitListener implements Listener
 				}
 				// Check if he is admin so we need to restore his buffer
 				if(player.hasPermission("rscfjd.admin"))
-					restorePlayerBuffer(player);
+					plugin.restorePlayerBuffer(player);
 			}
 		}, delay);
-	}
-	public void restorePlayerBuffer(Player player)
-	{
-		final Trajectory buffer = plugin.trajMngr.loadBufferTrajectory(player);
-		if(buffer.points.length > 0)
-		{
-			plugin.setBufferedTrajectory(player, buffer);
-			plugin.commands.setSelectedPoint(player, buffer, buffer.points.length - 1, false);
-			player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix
-				+ "Your buffer has been restored, selected last point of " + buffer.points.length + " total."));
-		}
 	}
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event)
@@ -89,7 +76,7 @@ public class BukkitListener implements Listener
 		if(plugin.playerBuffers.containsKey(player))
 		{
 			final Trajectory buffer = plugin.getBufferedTrajectory(player);
-			plugin.trajMngr.saveBufferTrajectory(buffer, player);
+			plugin.trajMngr.saveBufferTrajectory(player, buffer);
 			plugin.playerBuffers.remove(player);
 		}
 	}
@@ -101,7 +88,7 @@ public class BukkitListener implements Listener
 		if(plugin.playerBuffers.containsKey(player))
 		{
 			final Trajectory buffer = plugin.getBufferedTrajectory(player);
-			plugin.trajMngr.saveBufferTrajectory(buffer, player);
+			plugin.trajMngr.saveBufferTrajectory(player, buffer);
 			plugin.playerBuffers.remove(player);
 		}
 	}
@@ -161,7 +148,7 @@ public class BukkitListener implements Listener
 			return;
 		// Load such trajectory
 		final String caption = sign.getLine(3);
-		final Trajectory trajectory = plugin.trajMngr.loadTrajectory(caption);
+		final Trajectory trajectory = plugin.trajMngr.loadTrajectory(caption, false);
 		if(trajectory.points.length == 0)
 			return;
 		// Check specific permission

@@ -45,19 +45,20 @@ public final class BukkitPluginMain extends JavaPlugin
 	@Override
 	public void onEnable()
 	{
+		// Create directory for player playerBuffers
+		new File(getDataFolder(), "buffers").mkdirs();
+		// Initiate objects
 		settings.onEnable();
 		updating.onEnable();
 		Phrases.extractTranslations(this.getDataFolder());
 		Phrases.fill(this, settings.getLanguage());
+		// Restore all online data
 		for(Player online : Tools.getOnlinePlayers())
 			if(online.hasPermission("rscfjd.admin"))
 			{
-				listener.restorePlayerBuffer(online);
+				restorePlayerBuffer(online);
 				updating.onAdminJoin(online, false);
 			}
-		// Create directory for player playerBuffers
-		new File(getDataFolder(), "buffers").mkdirs();
-		trajMngr.setFirstJoinTrajectoryCaption(settings.getFirstJoinTrajectory());
 		// Register event's dispatcher
 		getServer().getPluginManager().registerEvents(listener, this);
 		// mcstats.org
@@ -74,15 +75,18 @@ public final class BukkitPluginMain extends JavaPlugin
 	@Override
 	public void onDisable()
 	{
+		// Cancel all tasks and registrations
 		getServer().getServicesManager().unregisterAll(this);
 		getServer().getScheduler().cancelTasks(this);
 		for(Player demo : playStates.keySet())
 			trajectoryPlayer.finishDemo(demo);
+		// Save all
 		for(Map.Entry<Player, Trajectory> entry : playerBuffers.entrySet())
-			trajMngr.saveBufferTrajectory(entry.getValue(), entry.getKey());
+			trajMngr.saveBufferTrajectory(entry.getKey(), entry.getValue());
+		// Final clearing
 		playerBuffers.clear();
 		playStates.clear();
-		trajMngr.clear();
+		trajMngr.onDisable();
 		metrics = null;
 		consoleLog.info("[rscfjd] rscFirstJoinDemo has been disabled.");
 	}
@@ -116,5 +120,16 @@ public final class BukkitPluginMain extends JavaPlugin
 	public void setBufferedTrajectory(Player player, Trajectory buffer)
 	{
 		playerBuffers.put(player, buffer);
+	}
+	public void restorePlayerBuffer(Player player)
+	{
+		final Trajectory buffer = trajMngr.loadBufferTrajectory(player);
+		if(buffer.points.length > 0)
+		{
+			setBufferedTrajectory(player, buffer);
+			commands.setSelectedPoint(player, buffer, buffer.points.length - 1, false);
+			player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix
+				+ "Your buffer has been restored, selected last point of " + buffer.points.length + " total."));
+		}
 	}
 }
