@@ -17,6 +17,7 @@ import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitCommands;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitListener;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitSettings;
+import ru.simsonic.rscFirstJoinDemo.Bukkit.IntegrationMan;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.TrajectoryPlayState;
 import ru.simsonic.rscFirstJoinDemo.Updater.BukkitUpdater;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
@@ -31,6 +32,7 @@ public final class BukkitPluginMain extends JavaPlugin
 	public final BukkitListener listener = new BukkitListener(this);
 	public final BukkitCommands commands = new BukkitCommands(this);
 	public final TrajectoryMngr trajMngr = new TrajectoryMngr(this);
+	public final IntegrationMan intergts = new IntegrationMan(this);
 	public final TrajectoryPlayer trajectoryPlayer = new TrajectoryPlayer(this);
 	public final HashMap<Player, TrajectoryPlayState> playStates    = new HashMap<>();
 	public final HashMap<Player, Trajectory>          playerBuffers = new HashMap<>();

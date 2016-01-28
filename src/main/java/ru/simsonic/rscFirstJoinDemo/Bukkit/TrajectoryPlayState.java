@@ -12,6 +12,7 @@ public class TrajectoryPlayState implements TargetProcessor
 	public boolean    supportSpectatorMode;
 	public boolean    foundPlaceholderAPI;
 	public boolean    foundProtocolLib;
+	public boolean    foundNoCheatPlus;
 	// Original player state
 	public boolean    originalFlightAllow;
 	public boolean    originalFlightState;

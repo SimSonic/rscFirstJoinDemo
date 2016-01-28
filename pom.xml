@@ -4,7 +4,7 @@
 
 	<groupId>ru.simsonic</groupId>
 	<artifactId>rscFirstJoinDemo</artifactId>
-	<version>0.8.2b-SNAPSHOT</version>
+	<version>0.8.3b-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>rscFirstJoinDemo</name>
@@ -34,6 +34,10 @@
 		<repository>
 			<id>vault-repo</id>
 			<url>http://nexus.theyeticave.net/content/repositories/pub_releases/</url>
+		</repository>
+		<repository>
+			<id>md5-repo</id>
+			<url>http://repo.md-5.net/content/groups/public/</url>
 		</repository>
 		<repository>
 			<id>sk89q-repo</id>
@@ -77,15 +81,21 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>com.comphenix.protocol</groupId>
+			<artifactId>ProtocolLib</artifactId>
+			<version>3.6.4</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>me.clip</groupId>
 			<artifactId>placeholderapi</artifactId>
 			<version>1.8.4</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.comphenix.protocol</groupId>
-			<artifactId>ProtocolLib</artifactId>
-			<version>3.6.4</version>
+			<groupId>fr.neatmonster</groupId>
+			<artifactId>nocheatplus</artifactId>
+			<version>3.13.6-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

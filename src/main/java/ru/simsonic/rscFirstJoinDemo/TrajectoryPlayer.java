@@ -1,17 +1,16 @@
 package ru.simsonic.rscFirstJoinDemo;
 
 import java.util.logging.Level;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
+import ru.simsonic.rscFirstJoinDemo.Bukkit.IntegrationMan;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.TrajectoryPlayState;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
@@ -63,6 +62,7 @@ public class TrajectoryPlayer
 				player.resetPlayerWeather();
 				player.resetPlayerTime();
 				plugin.playStates.remove(player);
+				plugin.intergts.cancelExemptNCP(player);
 			}
 			for(Player online : plugin.getServer().getOnlinePlayers())
 				online.showPlayer(player);
@@ -110,12 +110,11 @@ public class TrajectoryPlayer
 		for(GameMode gm : GameMode.values())
 			if(gm.toString().equalsIgnoreCase("SPECTATOR"))
 				result.supportSpectatorMode = true;
-		// Integrate with PlaceholderAPI
-		final Plugin  placeholder = plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI");
-		result.foundPlaceholderAPI = (placeholder != null && placeholder.isEnabled());
-		// Integrate with ProtocolLib 3.6.4+ to show titles!
-		final Plugin protocolLib = plugin.getServer().getPluginManager().getPlugin("ProtocolLib");
-		result.foundProtocolLib = (protocolLib != null && protocolLib.isEnabled());
+		// Integrate with other plugins
+		result.foundPlaceholderAPI = plugin.intergts.isPlaceholderAPI();
+		result.foundProtocolLib    = plugin.intergts.isProtocolLib();
+		result.foundNoCheatPlus    = plugin.intergts.isNoCheatPlus();
+		plugin.intergts.doExemptNCP(player);
 		// Other setup
 		result.originalFlightAllow = player.getAllowFlight();
 		result.originalFlightState = player.isFlying();
@@ -200,7 +199,7 @@ public class TrajectoryPlayer
 		{
 			String text = GenericChatCodes.processStringStatic(tp1.messageOnReach);
 			if(tps.foundPlaceholderAPI)
-				text = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, text);
+				text = IntegrationMan.processPlaceholders(player, text);
 			player.sendMessage(text);
 		}
 		// Time and weather tricks
@@ -225,13 +224,13 @@ public class TrajectoryPlayer
 				: "";
 			if(tps.foundPlaceholderAPI)
 			{
-				title = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, title);
-				subtitle = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, subtitle);
+				title    = IntegrationMan.processPlaceholders(player, title);
+				subtitle = IntegrationMan.processPlaceholders(player, subtitle);
 			}
 			try
 			{
 				if(!"".equals(title) || !"".equals(subtitle))
-					sendTitle(player, title, subtitle, 20, tp1.showTitleTicks, 20);
+					IntegrationMan.sendTitles(player, title, subtitle, 20, tp1.showTitleTicks, 20);
 			} catch(Exception ex) {
 				BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] ProtocolLib error, disabling titles.\n{0}", ex);
 				tps.foundProtocolLib = false;
@@ -304,44 +303,5 @@ public class TrajectoryPlayer
 		if(result < -180.0f)
 			result += 360.0f;
 		return result;
-	}
-	public static void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) throws Exception
-	{
-		final com.comphenix.protocol.ProtocolManager protocolMan
-			= com.comphenix.protocol.ProtocolLibrary.getProtocolManager();
-		final com.comphenix.protocol.PacketType packetType
-			= com.comphenix.protocol.PacketType.Play.Server.TITLE;
-		// Send timings
-		final com.comphenix.protocol.events.PacketContainer pTimeTitle
-			= protocolMan.createPacket(packetType);
-		if(stay <= 0)
-			stay = 20;
-		pTimeTitle.getIntegers().
-			write(0, fadeIn).
-			write(1, stay).
-			write(2, fadeOut);
-		pTimeTitle.getTitleActions().write(0,
-			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TIMES);
-		protocolMan.sendServerPacket(player, pTimeTitle);
-		// Prepare and send subtitle
-		if("".equals(subtitle))
-			subtitle = ChatColor.RESET.toString();
-		final com.comphenix.protocol.events.PacketContainer pSubTitle
-			= protocolMan.createPacket(packetType);
-		pSubTitle.getChatComponents().write(0,
-			com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(subtitle));
-		pSubTitle.getTitleActions().write(0,
-			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.SUBTITLE);
-		protocolMan.sendServerPacket(player, pSubTitle);
-		// Prepare and send title
-		if("".equals(title))
-			title = ChatColor.RESET.toString();
-		final com.comphenix.protocol.events.PacketContainer pTitle
-			= protocolMan.createPacket(packetType);
-		pTitle.getChatComponents().write(0,
-			com.comphenix.protocol.wrappers.WrappedChatComponent.fromText(title));
-		pTitle.getTitleActions().write(0,
-			com.comphenix.protocol.wrappers.EnumWrappers.TitleAction.TITLE);
-		protocolMan.sendServerPacket(player, pTitle);
 	}
 }
