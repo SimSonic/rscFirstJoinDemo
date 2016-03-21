@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
+import ru.simsonic.rscFirstJoinDemo.Phrases;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
@@ -506,9 +507,9 @@ public class BukkitCommands
 				}
 				break;
 			default:
-				throw new CommandAnswerException("{_LR}Unknown subcommand.");
+				throw new CommandAnswerException(Phrases.ERR_NOT_A_COMMAND.toString());
 		}
-		throw new CommandAnswerException("{_LR}Not enough permissions.");
+		throw new CommandAnswerException(Phrases.ERR_NO_PERMISSIONS.toString());
 	}
 	public ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID, boolean teleport)
 	{
@@ -531,13 +532,13 @@ public class BukkitCommands
 	boolean checkAdminOnly(CommandSender sender) throws CommandAnswerException
 	{
 		if(!sender.hasPermission("rscfjd.admin"))
-			throw new CommandAnswerException("{_LR}Not enough permissions.");
+			throw new CommandAnswerException(Phrases.ERR_NO_PERMISSIONS.toString());
 		return true;
 	}
 	Player checkPlayerOnly(CommandSender sender) throws CommandAnswerException
 	{
 		if(!(sender instanceof Player))
-			throw new CommandAnswerException("{_LR}This command cannot be run from console.");
+			throw new CommandAnswerException(Phrases.ERR_NOT_A_PLAYER.toString());
 		return (Player)sender;
 	}
 	ArrayList<String> setSelectedPoint(Player player, Trajectory buffer, int pointID)

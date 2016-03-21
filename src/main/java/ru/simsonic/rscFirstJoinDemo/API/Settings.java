@@ -15,11 +15,13 @@ public interface Settings
 	public void onLoad();
 	public void onEnable();
 	
-	public String  getLanguage();
 	public String  getFirstJoinTrajectory();
 	public boolean getFirstJoinEnabled();
 	public int     getFirstJoinDelay();
 	public boolean getRequireSignPerms();
 	public boolean getLogStartStop();
 	public boolean getLogPointReached();
+	public String  getLanguage();
+	
+	public TranslationProvider getTranslationProvider();
 }

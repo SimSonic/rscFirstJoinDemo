@@ -6,15 +6,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import org.bukkit.configuration.file.YamlConfiguration;
+import ru.simsonic.rscFirstJoinDemo.API.TranslationProvider;
 
 public enum Phrases
 {
 	PLUGIN_ENABLED    ("generic.enabled"),
 	PLUGIN_DISABLED   ("generic.disabled"),
 	PLUGIN_RELOADED   ("generic.reloaded"),
-	PROTOCOLLIB_YES   ("generic.plib-y"),
-	PROTOCOLLIB_NO    ("generic.plib-n"),
+	PLUGIN_PLIB_YES   ("generic.plib-y"),
+	PLUGIN_PLIB_NO    ("generic.plib-n"),
+	PLUGIN_METRICS    ("generic.metrics"),
+	PLUGIN_NOCHEATPLUS("generic.nocheatplus"),
+	DEMO_EMPTY        ("logging.demo-empty"),
+	DEMO_STARTING     ("logging.demo-start"),
+	DEMO_STOPPING     ("logging.demo-stop"),
+	NCP_EXEMPT        ("logging.ncp-exempt"),
+	NCP_RESTORE       ("logging.ncp-restore"),
+	POINT_REACHED     ("logging.on-reach"),
+	ERR_NO_PERMISSIONS("errors.no-perms"),
+	ERR_NOT_A_PLAYER  ("errors.player-only"),
+	ERR_NOT_A_COMMAND ("errors.unknown-cmd"),
 	;
 	private final String node;
 	private String phrase;
@@ -27,12 +38,10 @@ public enum Phrases
 	{
 		return phrase;
 	}
-	public static void fill(BukkitPluginMain plugin, String langName)
+	public static void applyTranslation(TranslationProvider provider)
 	{
-		final File langFile = new File(plugin.getDataFolder(), langName + ".yml");
-		final YamlConfiguration langConfig = YamlConfiguration.loadConfiguration(langFile);
 		for(Phrases value : Phrases.values())
-			value.phrase = langConfig.getString(value.node, value.node);
+			value.phrase = provider.getString(value.node);
 	}
 	public static void extractTranslations(File workingDir)
 	{

@@ -40,9 +40,9 @@ public final class BukkitPluginMain extends JavaPlugin
 	@Override
 	public void onLoad()
 	{
-		saveDefaultConfig();
+		Phrases.extractTranslations(getDataFolder());
 		settings.onLoad();
-		consoleLog.log(Level.INFO, "[rscfjd] rscFirstJoinDemo has been loaded.");
+		consoleLog.log(Level.INFO, Settings.chatPrefix + "rscFirstJoinDemo has been loaded.");
 	}
 	@Override
 	public void onEnable()
@@ -52,8 +52,7 @@ public final class BukkitPluginMain extends JavaPlugin
 		// Initiate objects
 		settings.onEnable();
 		updating.onEnable();
-		Phrases.extractTranslations(this.getDataFolder());
-		Phrases.fill(this, settings.getLanguage());
+		Phrases.applyTranslation(settings.getTranslationProvider());
 		// Restore all online data
 		for(Player online : Tools.getOnlinePlayers())
 			if(online.hasPermission("rscfjd.admin"))
@@ -68,29 +67,30 @@ public final class BukkitPluginMain extends JavaPlugin
 		{
 			metrics = new MetricsLite(this);
 			metrics.start();
+			consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.PLUGIN_METRICS);
 		} catch(IOException ex) {
-			consoleLog.log(Level.INFO, "[rscfjd] Exception in Metrics:\n{0}", ex);
+			consoleLog.log(Level.INFO, Settings.chatPrefix + "Exception in Metrics:\n{0}", ex);
 		}
 		// Done
-		consoleLog.log(Level.INFO, "[rscfjd] rscFirstJoinDemo has been successfully enabled.");
+		consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.PLUGIN_ENABLED);
 	}
 	@Override
 	public void onDisable()
 	{
-		// Cancel all tasks and registrations
+		// Cancel all tasks and playing demos
 		getServer().getServicesManager().unregisterAll(this);
 		getServer().getScheduler().cancelTasks(this);
 		for(Player demo : playStates.keySet())
 			trajectoryPlayer.finishDemo(demo);
-		// Save all
+		playStates.clear();
+		// Save personal buffers
 		for(Map.Entry<Player, Trajectory> entry : playerBuffers.entrySet())
 			trajMngr.saveBufferTrajectory(entry.getKey(), entry.getValue());
-		// Final clearing
 		playerBuffers.clear();
-		playStates.clear();
+		// Final cleaning
 		trajMngr.onDisable();
 		metrics = null;
-		consoleLog.info("[rscfjd] rscFirstJoinDemo has been disabled.");
+		consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.PLUGIN_DISABLED);
 	}
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)

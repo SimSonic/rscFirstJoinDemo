@@ -1,0 +1,30 @@
+generic:
+  enabled:     'rscFirstJoinDemo has been successfully enabled.'
+  disabled:    'rscFirstJoinDemo has been disabled.'
+  reloaded:    'rscFirstJoinDemo has been reloaded.'
+  metrics:     'Metrics (mcstats.org) enabled.'
+  plib-y:      'ProtocolLib was found and integrated.'
+  plib-n:      'ProtocolLib wasn't found.'
+  nocheatplus: 'Integrated with NoCheatPlus.'
+logging:
+  demo-empty:  'Cannot start demo for {0}: it has no points.'
+  demo-start:  'Starting playing demo {0} to {1}.'
+  demo-stop:   'Finished playing demo to {0}.'
+  ncp-exempt:  'Exempting {0} from NCP checks.'
+  ncp-restore: 'Restoring NCP checks for {0}.'
+  on-reach:    'Player {0} has reached {1} #{2}.'
+errors:
+  no-perms:    '{_LR}Not enough permissions.'
+  player-only: '{_LR}This command cannot be run from console.'
+  unknown-cmd: '{_LR}Unknown subcommand.'
+editor:
+commands:
+  help:
+    usage:  'help'
+    info:   'Shows all available commands.'
+  reload:
+    usage:  'reload'
+    info:   'Disables and reenables plugin.'
+  update:
+    usage:  'update [do]'
+    info:   'Checks for a newer version or installs it (if \`do\` is specified)'

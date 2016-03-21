@@ -2,9 +2,10 @@ settings:
   first-join-trajectory: 'firstjoin'
   first-join-enable:     true
   first-join-delay:      20
-  require-permissions-for-signs: false
+  language: 'english'
   logging:
     player-start-stop:    true
     player-point-reached: false
+  require-permissions-for-signs: false
 internal:
-  version: 3
+  version: 4

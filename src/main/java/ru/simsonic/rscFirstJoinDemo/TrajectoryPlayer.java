@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.util.Vector;
+import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.IntegrationMan;
@@ -40,7 +41,7 @@ public class TrajectoryPlayer
 			final TrajectoryPlayState tps = prepareDemo(player, trajectory);
 			tps.currentPoint = -1;
 			if(plugin.settings.getLogStartStop())
-				BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Starting playing demo {0} to {1}",
+				BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.DEMO_STARTING,
 					new Object[] { tps.trajectory.caption, player.getName() });
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo starting error: {0}", ex);
@@ -62,6 +63,8 @@ public class TrajectoryPlayer
 				player.resetPlayerWeather();
 				player.resetPlayerTime();
 				plugin.playStates.remove(player);
+				if(plugin.settings.getLogStartStop() && tps.foundNoCheatPlus)
+					BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.NCP_RESTORE, player.getName());
 				plugin.intergts.cancelExemptNCP(player);
 			}
 			for(Player online : plugin.getServer().getOnlinePlayers())
@@ -85,7 +88,8 @@ public class TrajectoryPlayer
 					player.saveData();
 				}
 				if(plugin.settings.getLogStartStop())
-					BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Finished playing demo to {0}", player.getName());
+					BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.DEMO_STOPPING,
+						player.getName());
 			}
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo stopping error: {0}", ex);
@@ -102,7 +106,8 @@ public class TrajectoryPlayer
 		final TrajectoryPlayState result = trajectory.newPlayState();
 		if(result.trajectory.points.length <= 0)
 		{
-			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Cannot run demo for {0}, it is empty.", player.getName());
+			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.DEMO_EMPTY,
+				player.getName());
 			throw new RuntimeException("Demo is empty.");
 		}
 		// Does this server support SPECTATOR mode?
@@ -114,6 +119,8 @@ public class TrajectoryPlayer
 		result.foundPlaceholderAPI = plugin.intergts.isPlaceholderAPI();
 		result.foundProtocolLib    = plugin.intergts.isProtocolLib();
 		result.foundNoCheatPlus    = plugin.intergts.isNoCheatPlus();
+		if(plugin.settings.getLogStartStop() && result.foundNoCheatPlus)
+			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.NCP_EXEMPT, player.getName());
 		plugin.intergts.doExemptNCP(player);
 		// Other setup
 		result.originalFlightAllow = player.getAllowFlight();
@@ -186,12 +193,12 @@ public class TrajectoryPlayer
 		tps.currentSegmentDeltaYaw = calculateYawDelta(tp1, tp2);
 		// Log into console about this event
 		if(plugin.settings.getLogPointReached())
-			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Player {0} has reached {1} #{2}", new Object[]
+			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.POINT_REACHED, new Object[]
 			{
 				player.getName(),
 				tps.trajectory.caption != null
 					? tps.trajectory.caption
-					: "his own buffer",
+					: "<buffer>",
 				tps.currentPoint,
 			});
 		// Message on point reach

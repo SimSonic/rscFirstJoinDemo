@@ -1,7 +1,10 @@
 package ru.simsonic.rscFirstJoinDemo.Bukkit;
 
+import java.io.File;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
+import ru.simsonic.rscFirstJoinDemo.API.TranslationProvider;
 import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
 
 public class BukkitSettings implements Settings
@@ -14,18 +17,19 @@ public class BukkitSettings implements Settings
 	@Override
 	public void onLoad()
 	{
+		plugin.saveDefaultConfig();
 		final FileConfiguration config = plugin.getConfig();
 		switch(config.getInt("internal.version", 0))
 		{
 			case 0:
 				// EMPTY (CLEARED) CONFIG?
-				BukkitPluginMain.consoleLog.info("Filling config.yml with default values...");
+				BukkitPluginMain.consoleLog.info("[rscfjd] Filling config.yml with default values...");
 				// FILL WITH DEFAULT VALUES
 				config.set("settings.trajectory", Settings.defaultFirstJoinTrajectory);
 				// FINISH
 				config.set("internal.version", 1);
 			case 1:
-				BukkitPluginMain.consoleLog.info("Updating config.yml version (v1 -> v2).");
+				BukkitPluginMain.consoleLog.info("[rscfjd] Updating config.yml version (v1 -> v2).");
 				// REMOVE NODES
 				config.set("settings.turn-into-spectator", null);
 				config.set("settings.signs", null);
@@ -33,7 +37,7 @@ public class BukkitSettings implements Settings
 				config.set("internal.version", 2);
 				plugin.saveConfig();
 			case 2:
-				BukkitPluginMain.consoleLog.info("Updating config.yml version (v2 -> v3).");
+				BukkitPluginMain.consoleLog.info("[rscfjd] Updating config.yml version (v2 -> v3).");
 				// RENAME NODE trajectory -> first-join-trajectory
 				config.set("settings.first-join-trajectory", config.getString("settings.trajectory", defaultFirstJoinTrajectory));
 				config.set("settings.trajectory", null);
@@ -47,7 +51,7 @@ public class BukkitSettings implements Settings
 				config.set("internal.version", 3);
 				plugin.saveConfig();
 			case 3:
-				BukkitPluginMain.consoleLog.info("Updating config.yml version (v3 -> v4).");
+				BukkitPluginMain.consoleLog.info("[rscfjd] Updating config.yml version (v3 -> v4).");
 				// FIX MY OLD MISTAKE ('logging' node was named 'log')
 				config.set("settings.log", null);
 				// NEW NODE
@@ -130,5 +134,19 @@ public class BukkitSettings implements Settings
 		config.set("settings.language", result);
 		plugin.saveConfig();
 		return result;
+	}
+	@Override
+	public TranslationProvider getTranslationProvider()
+	{
+		final File langFile = new File(plugin.getDataFolder(), getLanguage() + ".yml");
+		final YamlConfiguration langConfig = YamlConfiguration.loadConfiguration(langFile);
+		return new TranslationProvider()
+		{
+			@Override
+			public String getString(String path)
+			{
+				return langConfig.getString(path, path);
+			}
+		};
 	}
 }
