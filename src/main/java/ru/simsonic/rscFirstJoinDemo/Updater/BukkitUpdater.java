@@ -24,7 +24,6 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.simsonic.rscCommonsLibrary.RestartableThread;
-import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
 public final class BukkitUpdater implements Listener
@@ -32,10 +31,12 @@ public final class BukkitUpdater implements Listener
 	private final JavaPlugin      plugin;
 	private final String          latestURL;
 	private final HashSet<Player> staff = new HashSet<>();
-	public BukkitUpdater(JavaPlugin plugin, String latestURL)
+	private final String          chatPrefix;
+	public BukkitUpdater(JavaPlugin plugin, String latestURL, String chatPrefix)
 	{
-		this.plugin    = plugin;
-		this.latestURL = latestURL;
+		this.plugin     = plugin;
+		this.latestURL  = latestURL;
+		this.chatPrefix = chatPrefix;
 	}
 	public void onEnable()
 	{
@@ -123,12 +124,12 @@ public final class BukkitUpdater implements Listener
 				final ConsoleCommandSender console = plugin.getServer().getConsoleSender();
 				for(String line : lines)
 					if(line != null)
-						console.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+						console.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + line));
 				// PLAYERS
 				for(Player online : staff)
 					for(String line : lines)
 						if(line != null)
-							online.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+							online.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + line));
 				notify();
 			}
 		};
@@ -165,7 +166,7 @@ public final class BukkitUpdater implements Listener
 			if(lines != null)
 				for(String line : lines)
 					if(line != null)
-						player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + line));
+						player.sendMessage(GenericChatCodes.processStringStatic(chatPrefix + line));
 		}
 	}
 	@EventHandler

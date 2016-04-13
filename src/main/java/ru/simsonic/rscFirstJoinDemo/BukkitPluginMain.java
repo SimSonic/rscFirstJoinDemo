@@ -27,7 +27,7 @@ import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
 public final class BukkitPluginMain extends JavaPlugin
 {
 	public final static Logger  consoleLog = Bukkit.getLogger();
-	public final BukkitUpdater  updating = new BukkitUpdater(this, Settings.updaterURL);
+	public final BukkitUpdater  updating = new BukkitUpdater(this, Settings.updaterURL, Settings.chatPrefix);
 	public final BukkitSettings settings = new BukkitSettings(this);
 	public final BukkitListener listener = new BukkitListener(this);
 	public final BukkitCommands commands = new BukkitCommands(this);
