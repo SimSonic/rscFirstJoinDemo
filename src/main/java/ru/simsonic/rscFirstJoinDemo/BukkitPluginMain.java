@@ -19,7 +19,7 @@ import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitListener;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.BukkitSettings;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.IntegrationMan;
 import ru.simsonic.rscFirstJoinDemo.Bukkit.TrajectoryPlayState;
-import ru.simsonic.rscFirstJoinDemo.Updater.BukkitUpdater;
+import ru.simsonic.rscMinecraftLibrary.AutoUpdater.BukkitUpdater;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.CommandAnswerException;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
