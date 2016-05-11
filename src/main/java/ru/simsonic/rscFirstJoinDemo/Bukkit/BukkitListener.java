@@ -123,18 +123,18 @@ public class BukkitListener implements Listener
 		final Player player = event.getPlayer();
 		if(!player.hasPermission("rscfjd.admin"))
 		{
-			player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + "{_LR}Not enough permissions."));
+			player.sendMessage(GenericChatCodes.processStringStatic(Settings.CHAT_PREFIX + "{_LR}Not enough permissions."));
 			event.setCancelled(true);
 			return;
 		}
 		final String caption = event.getLine(1).isEmpty()
 			? plugin.settings.getFirstJoinTrajectory()
 			: event.getLine(1);
-		event.setLine(0, Settings.signLine0);
+		event.setLine(0, Settings.SIGN_LINE_0);
 		event.setLine(1, GenericChatCodes.processStringStatic("{_LG}Click to play demo"));
 		event.setLine(2, "");
 		event.setLine(3, caption);
-		player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + "{_LG}Done."));
+		player.sendMessage(GenericChatCodes.processStringStatic(Settings.CHAT_PREFIX + "{_LG}Done."));
 	}
 	@org.bukkit.event.EventHandler
 	public void onSignRBClick(final PlayerInteractEvent event)
@@ -144,7 +144,7 @@ public class BukkitListener implements Listener
 		if(!(event.getClickedBlock().getState() instanceof Sign))
 			return;
 		final Sign sign = (Sign)event.getClickedBlock().getState();
-		if(!sign.getLine(0).equals(Settings.signLine0))
+		if(!sign.getLine(0).equals(Settings.SIGN_LINE_0))
 			return;
 		// Load such trajectory
 		final String caption = sign.getLine(3);

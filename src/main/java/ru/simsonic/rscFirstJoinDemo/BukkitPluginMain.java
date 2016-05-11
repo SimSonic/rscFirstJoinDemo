@@ -27,7 +27,7 @@ import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
 public final class BukkitPluginMain extends JavaPlugin
 {
 	public final static Logger  consoleLog = Bukkit.getLogger();
-	public final BukkitUpdater  updating = new BukkitUpdater(this, Settings.updaterURL, Settings.chatPrefix);
+	public final BukkitUpdater  updating = new BukkitUpdater(this, Settings.UPDATER_URL, Settings.CHAT_PREFIX);
 	public final BukkitSettings settings = new BukkitSettings(this);
 	public final BukkitListener listener = new BukkitListener(this);
 	public final BukkitCommands commands = new BukkitCommands(this);
@@ -42,7 +42,7 @@ public final class BukkitPluginMain extends JavaPlugin
 	{
 		Phrases.extractTranslations(getDataFolder());
 		settings.onLoad();
-		consoleLog.log(Level.INFO, Settings.chatPrefix + "rscFirstJoinDemo has been loaded.");
+		consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + "rscFirstJoinDemo has been loaded.");
 	}
 	@Override
 	public void onEnable()
@@ -67,12 +67,12 @@ public final class BukkitPluginMain extends JavaPlugin
 		{
 			metrics = new MetricsLite(this);
 			metrics.start();
-			consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.PLUGIN_METRICS);
+			consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.PLUGIN_METRICS);
 		} catch(IOException ex) {
-			consoleLog.log(Level.INFO, Settings.chatPrefix + "Exception in Metrics:\n{0}", ex);
+			consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + "Exception in Metrics:\n{0}", ex);
 		}
 		// Done
-		consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.PLUGIN_ENABLED);
+		consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.PLUGIN_ENABLED);
 	}
 	@Override
 	public void onDisable()
@@ -90,7 +90,7 @@ public final class BukkitPluginMain extends JavaPlugin
 		// Final cleaning
 		trajMngr.onDisable();
 		metrics = null;
-		consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.PLUGIN_DISABLED);
+		consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.PLUGIN_DISABLED);
 	}
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
@@ -107,7 +107,7 @@ public final class BukkitPluginMain extends JavaPlugin
 		} catch(CommandAnswerException ex) {
 			for(String answer : ex.getMessageArray())
 				if(answer != null)
-					sender.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix + answer));
+					sender.sendMessage(GenericChatCodes.processStringStatic(Settings.CHAT_PREFIX + answer));
 		}
 		return true;
 	}
@@ -130,7 +130,7 @@ public final class BukkitPluginMain extends JavaPlugin
 		{
 			setBufferedTrajectory(player, buffer);
 			commands.setSelectedPoint(player, buffer, buffer.points.length - 1, false);
-			player.sendMessage(GenericChatCodes.processStringStatic(Settings.chatPrefix
+			player.sendMessage(GenericChatCodes.processStringStatic(Settings.CHAT_PREFIX
 				+ "Your buffer has been restored, selected last point of " + buffer.points.length + " total."));
 		}
 	}

@@ -41,7 +41,7 @@ public class TrajectoryPlayer
 			final TrajectoryPlayState tps = prepareDemo(player, trajectory);
 			tps.currentPoint = -1;
 			if(plugin.settings.getLogStartStop())
-				BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.DEMO_STARTING,
+				BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.DEMO_STARTING,
 					new Object[] { tps.trajectory.caption, player.getName() });
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo starting error: {0}", ex);
@@ -64,7 +64,7 @@ public class TrajectoryPlayer
 				player.resetPlayerTime();
 				plugin.playStates.remove(player);
 				if(plugin.settings.getLogStartStop() && tps.foundNoCheatPlus)
-					BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.NCP_RESTORE, player.getName());
+					BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.NCP_RESTORE, player.getName());
 				plugin.intergts.cancelExemptNCP(player);
 			}
 			for(Player online : plugin.getServer().getOnlinePlayers())
@@ -88,7 +88,7 @@ public class TrajectoryPlayer
 					player.saveData();
 				}
 				if(plugin.settings.getLogStartStop())
-					BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.DEMO_STOPPING,
+					BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.DEMO_STOPPING,
 						player.getName());
 			}
 		} catch(RuntimeException ex) {
@@ -106,7 +106,7 @@ public class TrajectoryPlayer
 		final TrajectoryPlayState result = trajectory.newPlayState();
 		if(result.trajectory.points.length <= 0)
 		{
-			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.DEMO_EMPTY,
+			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.DEMO_EMPTY,
 				player.getName());
 			throw new RuntimeException("Demo is empty.");
 		}
@@ -120,7 +120,7 @@ public class TrajectoryPlayer
 		result.foundProtocolLib    = plugin.intergts.isProtocolLib();
 		result.foundNoCheatPlus    = plugin.intergts.isNoCheatPlus();
 		if(plugin.settings.getLogStartStop() && result.foundNoCheatPlus)
-			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.NCP_EXEMPT, player.getName());
+			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.NCP_EXEMPT, player.getName());
 		plugin.intergts.doExemptNCP(player);
 		// Other setup
 		result.originalFlightAllow = player.getAllowFlight();
@@ -193,7 +193,7 @@ public class TrajectoryPlayer
 		tps.currentSegmentDeltaYaw = calculateYawDelta(tp1, tp2);
 		// Log into console about this event
 		if(plugin.settings.getLogPointReached())
-			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.chatPrefix + Phrases.POINT_REACHED, new Object[]
+			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.POINT_REACHED, new Object[]
 			{
 				player.getName(),
 				tps.trajectory.caption != null
