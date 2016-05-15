@@ -6,8 +6,8 @@ website: ${project.url}
 soft-depend:
 - ProtocolLib
 - PlaceholderAPI
-- HolographicDisplays
 - NoCheatPlus
+- HolographicDisplays
 commands:
   rscfjd:
     description: ${project.artifactId} command hub

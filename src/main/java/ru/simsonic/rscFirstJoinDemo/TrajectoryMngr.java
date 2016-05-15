@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import ru.simsonic.rscCommonsLibrary.HashAndCipherUtilities;
+import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
 
@@ -49,7 +50,7 @@ public class TrajectoryMngr
 			// Pre-1.7 servers
 		}
 		final String lowerCaption = caption.toLowerCase();
-		final File buffersDir = new File(plugin.getDataFolder(), "buffers");
+		final File buffersDir = new File(plugin.getDataFolder(), Settings.DIR_PERSONAL);
 		final File trajectoryFile = new File(buffersDir, lowerCaption + ".json");
 		final Trajectory result = loadTrajectoryFile(trajectoryFile, false);
 		result.caption = caption;
@@ -87,7 +88,7 @@ public class TrajectoryMngr
 		}
 		final String lowerCaption = caption.toLowerCase();
 		trajectories.put(lowerCaption, trajectory);
-		final File buffersDir = new File(plugin.getDataFolder(), "buffers");
+		final File buffersDir = new File(plugin.getDataFolder(), Settings.DIR_PERSONAL);
 		final File trajectoryFile = new File(buffersDir, lowerCaption + ".json");
 		try
 		{

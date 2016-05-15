@@ -1,11 +1,28 @@
+# Read comments for configuration nodes here:
+# https://github.com/SimSonic/rscFirstJoinDemo/blob/master/src/main/resources/config.yml
 settings:
+  # Trajectory, which is played to the players that connect
+  # to the server for the first time.
+  # RU: Какую траекторию проигрывать для игроков, подключающихся
+  # на сервер в первый раз?
   first-join-trajectory: 'firstjoin'
   first-join-enable:     true
+  # Delay in ticks before playing starts
+  # RU: Задержка перед проигрыванием этой траектории, в серверных тиках
   first-join-delay:      20
+  # There are english and russian languages out of the box. You can
+  # create your own translation file and enter it's name here.
+  # RU: Из коробки идут английский и русский языки. Вы можете создать свой
+  # файл с переводом на основе готовых и вписать здесь имя этого файла.
   language: 'english'
+  # What player events should be shown in console?
+  # RU: Какие события с игроками должны быть отображены в консоли?
   logging:
     player-start-stop:    true
     player-point-reached: false
+  # Should players have rscfjd.sign.<trajectory> permission?
+  # RU: Требовать ли от игроков явных прав для пользования табличками?
   require-permissions-for-signs: false
+
 internal:
   version: 4

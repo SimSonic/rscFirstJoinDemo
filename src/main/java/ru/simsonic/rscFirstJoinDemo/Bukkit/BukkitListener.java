@@ -1,6 +1,9 @@
 package ru.simsonic.rscFirstJoinDemo.Bukkit;
 
 import java.util.logging.Level;
+import org.bukkit.Effect;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -15,6 +18,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.util.Vector;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.BukkitPluginMain;
@@ -162,5 +166,34 @@ public class BukkitListener implements Listener
 		// Start if allowed
 		if(permSign || permTrajectory)
 			plugin.trajectoryPlayer.beginDemo(player, trajectory);
+	}
+	private final double distanceMax = 100;
+	private void renderRay(Location source, Location target)
+	{
+		final float colorR = 127 / 255.0f;
+		final float colorG = 255 / 255.0f;
+		final float colorB = 255 / 255.0f;
+		final Location start  = source.clone().add(0.0, 2.5, 0.0);
+		final Location stop   = target.clone();
+		final double   period = 0.1;
+		final World    world  = start.getWorld();
+		if(world.equals(stop.getWorld()))
+		{
+			final double distance = start.distance(stop);
+			if(distance <= distanceMax)
+			{
+				final Vector step = stop.subtract(start).toVector().normalize().multiply(period);
+				final int steps = (int)(distance / period);
+				for(int stepId = 0; stepId < steps; stepId += 1)
+				{
+					world.spigot().playEffect(
+						start, Effect.COLOURED_DUST,
+						0, 0,
+						colorR, colorG, colorB,
+						0.0f, 0, 200);
+					start.add(step);
+				}
+			}
+		}
 	}
 }

@@ -25,7 +25,7 @@ public class BukkitSettings implements Settings
 				// EMPTY (CLEARED) CONFIG?
 				BukkitPluginMain.consoleLog.info("[rscfjd] Filling config.yml with default values...");
 				// FILL WITH DEFAULT VALUES
-				config.set("settings.trajectory", Settings.defaultFirstJoinTrajectory);
+				config.set("settings.trajectory", Settings.DEFAULT_TRAJECTORY);
 				// FINISH
 				config.set("internal.version", 1);
 			case 1:
@@ -39,7 +39,7 @@ public class BukkitSettings implements Settings
 			case 2:
 				BukkitPluginMain.consoleLog.info("[rscfjd] Updating config.yml version (v2 -> v3).");
 				// RENAME NODE trajectory -> first-join-trajectory
-				config.set("settings.first-join-trajectory", config.getString("settings.trajectory", defaultFirstJoinTrajectory));
+				config.set("settings.first-join-trajectory", config.getString("settings.trajectory", DEFAULT_TRAJECTORY));
 				config.set("settings.trajectory", null);
 				// NEW NODES
 				config.set("settings.first-join-enable", true);
@@ -76,7 +76,7 @@ public class BukkitSettings implements Settings
 	public String getFirstJoinTrajectory()
 	{
 		final FileConfiguration config = plugin.getConfig();
-		final String result = config.getString("settings.first-join-trajectory", defaultFirstJoinTrajectory);
+		final String result = config.getString("settings.first-join-trajectory", DEFAULT_TRAJECTORY);
 		config.set("settings.first-join-trajectory", result);
 		plugin.saveConfig();
 		return result;

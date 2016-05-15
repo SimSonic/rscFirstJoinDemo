@@ -498,11 +498,9 @@ public class BukkitCommands
 				if(checkAdminOnly(sender))
 				{
 					if("do".equals(args[0]))
-					{
 						plugin.updating.doUpdate(sender instanceof Player ? (Player)sender : null);
-					} else {
+					else
 						plugin.updating.checkUpdate(sender instanceof Player ? (Player)sender : null);
-					}
 					return;
 				}
 				break;

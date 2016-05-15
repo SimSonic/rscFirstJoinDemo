@@ -48,7 +48,7 @@ public final class BukkitPluginMain extends JavaPlugin
 	public void onEnable()
 	{
 		// Create directory for player playerBuffers
-		new File(getDataFolder(), "buffers").mkdirs();
+		new File(getDataFolder(), Settings.DIR_PERSONAL).mkdirs();
 		// Initiate objects
 		settings.onEnable();
 		updating.onEnable();
