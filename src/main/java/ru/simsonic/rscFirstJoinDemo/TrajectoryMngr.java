@@ -2,6 +2,7 @@ package ru.simsonic.rscFirstJoinDemo;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.logging.Level;
 import org.bukkit.Location;
@@ -11,6 +12,7 @@ import ru.simsonic.rscCommonsLibrary.HashAndCipherUtilities;
 import ru.simsonic.rscFirstJoinDemo.API.Settings;
 import ru.simsonic.rscFirstJoinDemo.API.Trajectory;
 import ru.simsonic.rscFirstJoinDemo.API.TrajectoryPoint;
+import ru.simsonic.rscMinecraftLibrary.Bukkit.GenericChatCodes;
 
 public class TrajectoryMngr
 {
@@ -35,7 +37,8 @@ public class TrajectoryMngr
 		final File trajectoryFile = new File(plugin.getDataFolder(), lowerCaption + ".json");
 		result = loadTrajectoryFile(trajectoryFile, true);
 		result.caption = caption;
-		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} contains ({1} points)",
+		BukkitPluginMain.consoleLog.log(Level.INFO,
+			Settings.CHAT_PREFIX + Phrases.TRAJ_LOADED.toString(),
 			new Object[] { caption, result.points.length });
 		trajectories.put(lowerCaption, result);
 		return result;
@@ -54,7 +57,8 @@ public class TrajectoryMngr
 		final File trajectoryFile = new File(buffersDir, lowerCaption + ".json");
 		final Trajectory result = loadTrajectoryFile(trajectoryFile, false);
 		result.caption = caption;
-		BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} contains ({1} points)",
+		BukkitPluginMain.consoleLog.log(Level.INFO,
+			Settings.CHAT_PREFIX + Phrases.TRAJ_LOADED.toString(),
 			new Object[] { caption, result.points.length });
 		trajectories.put(lowerCaption, result);
 		return result;
@@ -70,7 +74,8 @@ public class TrajectoryMngr
 		{
 			trajectory.caption = caption;
 			saveTrajectoryFile(trajectory, trajectoryFile);
-			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} has been saved ({1})",
+			BukkitPluginMain.consoleLog.log(Level.INFO,
+				Settings.CHAT_PREFIX + Phrases.TRAJ_SAVED.toString(),
 				new Object[] { caption, trajectory.points.length });
 		} catch(IOException ex) {
 		}
@@ -93,7 +98,8 @@ public class TrajectoryMngr
 		try
 		{
 			saveTrajectoryFile(trajectory, trajectoryFile);
-			BukkitPluginMain.consoleLog.log(Level.INFO, "[rscfjd] Trajectory {0} has been saved ({1})",
+			BukkitPluginMain.consoleLog.log(Level.INFO,
+				Settings.CHAT_PREFIX + Phrases.TRAJ_SAVED.toString(),
 				new Object[] { caption, trajectory.points.length });
 		} catch(IOException ex) {
 		}
@@ -140,7 +146,20 @@ public class TrajectoryMngr
 		final World world = plugin.getServer().getWorld(tp.world);
 		if(world != null)
 			return new Location(world, tp.x, tp.y, tp.z, tp.yaw, tp.pitch);
-		BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] World isn't found: {0}", tp.world);
+		BukkitPluginMain.consoleLog.log(Level.WARNING,
+			Settings.CHAT_PREFIX + Phrases.NO_WORLD.toString(),
+			tp.world);
 		return null;
+	}
+	public void restorePlayerBuffer(Player player)
+	{
+		final Trajectory buffer = loadBufferTrajectory(player);
+		if(buffer.points.length > 0)
+		{
+			plugin.setBufferedTrajectory(player, buffer);
+			plugin.commands.setSelectedPoint(player, buffer, buffer.points.length - 1, false);
+			player.sendMessage(GenericChatCodes.processStringStatic(Settings.CHAT_PREFIX
+				+ MessageFormat.format(Phrases.RESTORED.toString(), buffer.points.length)));
+		}
 	}
 }

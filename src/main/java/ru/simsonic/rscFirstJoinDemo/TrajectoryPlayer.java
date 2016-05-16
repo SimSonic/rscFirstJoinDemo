@@ -31,7 +31,7 @@ public class TrajectoryPlayer
 				? tps.trajectory.selected - 2
 				: -1;
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo resuming error: {0}", ex);
+			BukkitPluginMain.consoleLog.log(Level.WARNING, Settings.CHAT_PREFIX + "Demo resuming error: {0}", ex);
 		}
 	}
 	public void beginDemo(final Player player, final Trajectory trajectory)
@@ -41,10 +41,10 @@ public class TrajectoryPlayer
 			final TrajectoryPlayState tps = prepareDemo(player, trajectory);
 			tps.currentPoint = -1;
 			if(plugin.settings.getLogStartStop())
-				BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.DEMO_STARTING,
+				BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.DEMO_STARTING.toString(),
 					new Object[] { tps.trajectory.caption, player.getName() });
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo starting error: {0}", ex);
+			BukkitPluginMain.consoleLog.log(Level.WARNING, Settings.CHAT_PREFIX + "Demo starting error: {0}", ex);
 		}
 	}
 	public void suspendDemo(Player player)
@@ -70,7 +70,7 @@ public class TrajectoryPlayer
 			for(Player online : plugin.getServer().getOnlinePlayers())
 				online.showPlayer(player);
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo pausing error: {0}", ex);
+			BukkitPluginMain.consoleLog.log(Level.WARNING, Settings.CHAT_PREFIX + "Demo pausing error: {0}", ex);
 		}
 	}
 	public void finishDemo(Player player)
@@ -92,7 +92,7 @@ public class TrajectoryPlayer
 						player.getName());
 			}
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo stopping error: {0}", ex);
+			BukkitPluginMain.consoleLog.log(Level.WARNING, Settings.CHAT_PREFIX + "Demo stopping error: {0}", ex);
 		}
 	}
 	private TrajectoryPlayState prepareDemo(final Player player, final Trajectory trajectory)
@@ -166,7 +166,7 @@ public class TrajectoryPlayer
 			if(tps.currentPoint < tps.trajectory.points.length)
 				onMakingNextStep(player, tps);
 		} catch(RuntimeException ex) {
-			BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] Demo processing error: {0}", ex);
+			BukkitPluginMain.consoleLog.log(Level.WARNING, Settings.CHAT_PREFIX + "Demo processing error: {0}", ex);
 			finishDemo(player);
 		}
 	}
@@ -239,7 +239,7 @@ public class TrajectoryPlayer
 				if(!"".equals(title) || !"".equals(subtitle))
 					IntegrationMan.sendTitles(player, title, subtitle, 20, tp1.showTitleTicks, 20);
 			} catch(Exception ex) {
-				BukkitPluginMain.consoleLog.log(Level.WARNING, "[rscfjd] ProtocolLib error, disabling titles.\n{0}", ex);
+				BukkitPluginMain.consoleLog.log(Level.WARNING, Settings.CHAT_PREFIX + "ProtocolLib error, disabling titles.\n{0}", ex);
 				tps.foundProtocolLib = false;
 			}
 		}

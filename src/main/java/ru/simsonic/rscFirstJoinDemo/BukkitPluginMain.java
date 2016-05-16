@@ -26,14 +26,14 @@ import ru.simsonic.rscMinecraftLibrary.Bukkit.Tools;
 
 public final class BukkitPluginMain extends JavaPlugin
 {
-	public final static Logger  consoleLog = Bukkit.getLogger();
-	public final BukkitUpdater  updating = new BukkitUpdater(this, Settings.UPDATER_URL, Settings.CHAT_PREFIX);
-	public final BukkitSettings settings = new BukkitSettings(this);
-	public final BukkitListener listener = new BukkitListener(this);
-	public final BukkitCommands commands = new BukkitCommands(this);
-	public final TrajectoryMngr trajMngr = new TrajectoryMngr(this);
-	public final IntegrationMan intergts = new IntegrationMan(this);
-	public final TrajectoryPlayer trajectoryPlayer = new TrajectoryPlayer(this);
+	public final static Logger    consoleLog = Bukkit.getLogger();
+	public final BukkitUpdater    updating = new BukkitUpdater(this, Settings.UPDATER_URL, Settings.CHAT_PREFIX);
+	public final BukkitSettings   settings = new BukkitSettings(this);
+	public final BukkitListener   listener = new BukkitListener(this);
+	public final BukkitCommands   commands = new BukkitCommands(this);
+	public final TrajectoryMngr   trajMngr = new TrajectoryMngr(this);
+	public final IntegrationMan   intergts = new IntegrationMan(this);
+	public final TrajectoryPlayer trajPlay = new TrajectoryPlayer(this);
 	public final HashMap<Player, TrajectoryPlayState> playStates    = new HashMap<>();
 	public final HashMap<Player, Trajectory>          playerBuffers = new HashMap<>();
 	private MetricsLite metrics;
@@ -47,17 +47,18 @@ public final class BukkitPluginMain extends JavaPlugin
 	@Override
 	public void onEnable()
 	{
-		// Create directory for player playerBuffers
-		new File(getDataFolder(), Settings.DIR_PERSONAL).mkdirs();
 		// Initiate objects
 		settings.onEnable();
 		updating.onEnable();
+		// Create directory for player playerBuffers
+		new File(getDataFolder(), Settings.DIR_PERSONAL).mkdirs();
+		new File(getDataFolder(), Settings.DIR_TRAJECTORIES).mkdirs();
 		Phrases.applyTranslation(settings.getTranslationProvider());
 		// Restore all online data
 		for(Player online : Tools.getOnlinePlayers())
 			if(online.hasPermission("rscfjd.admin"))
 			{
-				restorePlayerBuffer(online);
+				trajMngr.restorePlayerBuffer(online);
 				updating.onAdminJoin(online, false);
 			}
 		// Register event's dispatcher
@@ -67,12 +68,12 @@ public final class BukkitPluginMain extends JavaPlugin
 		{
 			metrics = new MetricsLite(this);
 			metrics.start();
-			consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.PLUGIN_METRICS);
+			consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + "{0}", Phrases.PLUGIN_METRICS);
 		} catch(IOException ex) {
 			consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + "Exception in Metrics:\n{0}", ex);
 		}
 		// Done
-		consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.PLUGIN_ENABLED);
+		consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + "{0}", Phrases.PLUGIN_ENABLED);
 	}
 	@Override
 	public void onDisable()
@@ -81,7 +82,7 @@ public final class BukkitPluginMain extends JavaPlugin
 		getServer().getServicesManager().unregisterAll(this);
 		getServer().getScheduler().cancelTasks(this);
 		for(Player demo : playStates.keySet())
-			trajectoryPlayer.finishDemo(demo);
+			trajPlay.finishDemo(demo);
 		playStates.clear();
 		// Save personal buffers
 		for(Map.Entry<Player, Trajectory> entry : playerBuffers.entrySet())
@@ -90,7 +91,7 @@ public final class BukkitPluginMain extends JavaPlugin
 		// Final cleaning
 		trajMngr.onDisable();
 		metrics = null;
-		consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.PLUGIN_DISABLED);
+		consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + "{0}", Phrases.PLUGIN_DISABLED);
 	}
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
@@ -122,16 +123,5 @@ public final class BukkitPluginMain extends JavaPlugin
 	public void setBufferedTrajectory(Player player, Trajectory buffer)
 	{
 		playerBuffers.put(player, buffer);
-	}
-	public void restorePlayerBuffer(Player player)
-	{
-		final Trajectory buffer = trajMngr.loadBufferTrajectory(player);
-		if(buffer.points.length > 0)
-		{
-			setBufferedTrajectory(player, buffer);
-			commands.setSelectedPoint(player, buffer, buffer.points.length - 1, false);
-			player.sendMessage(GenericChatCodes.processStringStatic(Settings.CHAT_PREFIX
-				+ "Your buffer has been restored, selected last point of " + buffer.points.length + " total."));
-		}
 	}
 }

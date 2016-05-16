@@ -7,6 +7,10 @@ generic:
   plib-n:      "ProtocolLib wasn\'t found."
   nocheatplus: "Integrated with NoCheatPlus."
 logging:
+  traj-loaded: "Trajectory {0} loaded and contains {1} points."
+  traj-saved:  "Trajectory {0} has been saved ({1} points)."
+  no-world:    "Such world isn't found: {0}."
+  restored:    "Your buffer has been restored, the last point (of {0} total) is selected."
   demo-empty:  "Cannot start demo for {0}: it has no points."
   demo-start:  "Starting playing demo {0} to {1}."
   demo-stop:   "Finished playing demo to {0}."

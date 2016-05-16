@@ -18,6 +18,10 @@ public class BukkitSettings implements Settings
 	public void onLoad()
 	{
 		plugin.saveDefaultConfig();
+	}
+	@Override
+	public void onEnable()
+	{
 		final FileConfiguration config = plugin.getConfig();
 		switch(config.getInt("internal.version", 0))
 		{
@@ -58,7 +62,6 @@ public class BukkitSettings implements Settings
 				config.set("settings.language", "english");
 				// FINISH
 				config.set("internal.version", 4);
-				plugin.saveConfig();
 			case 4:
 				// NEWEST VERSION
 				break;
@@ -66,10 +69,7 @@ public class BukkitSettings implements Settings
 				// UNSUPPORTED VERSION?
 				break;
 		}
-	}
-	@Override
-	public void onEnable()
-	{
+		plugin.saveConfig();
 		plugin.reloadConfig();
 	}
 	@Override
