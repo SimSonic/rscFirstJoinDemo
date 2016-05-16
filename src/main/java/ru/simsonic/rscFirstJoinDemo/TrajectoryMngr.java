@@ -38,7 +38,7 @@ public class TrajectoryMngr
 		result = loadTrajectoryFile(trajectoryFile, true);
 		result.caption = caption;
 		BukkitPluginMain.consoleLog.log(Level.INFO,
-			Settings.CHAT_PREFIX + Phrases.TRAJ_LOADED.toString(),
+			Settings.CHAT_PREFIX + Phrases.TRAJ_LOADED,
 			new Object[] { caption, result.points.length });
 		trajectories.put(lowerCaption, result);
 		return result;
@@ -58,7 +58,7 @@ public class TrajectoryMngr
 		final Trajectory result = loadTrajectoryFile(trajectoryFile, false);
 		result.caption = caption;
 		BukkitPluginMain.consoleLog.log(Level.INFO,
-			Settings.CHAT_PREFIX + Phrases.TRAJ_LOADED.toString(),
+			Settings.CHAT_PREFIX + Phrases.TRAJ_LOADED,
 			new Object[] { caption, result.points.length });
 		trajectories.put(lowerCaption, result);
 		return result;
@@ -75,7 +75,7 @@ public class TrajectoryMngr
 			trajectory.caption = caption;
 			saveTrajectoryFile(trajectory, trajectoryFile);
 			BukkitPluginMain.consoleLog.log(Level.INFO,
-				Settings.CHAT_PREFIX + Phrases.TRAJ_SAVED.toString(),
+				Settings.CHAT_PREFIX + Phrases.TRAJ_SAVED,
 				new Object[] { caption, trajectory.points.length });
 		} catch(IOException ex) {
 		}
@@ -99,7 +99,7 @@ public class TrajectoryMngr
 		{
 			saveTrajectoryFile(trajectory, trajectoryFile);
 			BukkitPluginMain.consoleLog.log(Level.INFO,
-				Settings.CHAT_PREFIX + Phrases.TRAJ_SAVED.toString(),
+				Settings.CHAT_PREFIX + Phrases.TRAJ_SAVED,
 				new Object[] { caption, trajectory.points.length });
 		} catch(IOException ex) {
 		}
@@ -147,7 +147,7 @@ public class TrajectoryMngr
 		if(world != null)
 			return new Location(world, tp.x, tp.y, tp.z, tp.yaw, tp.pitch);
 		BukkitPluginMain.consoleLog.log(Level.WARNING,
-			Settings.CHAT_PREFIX + Phrases.NO_WORLD.toString(),
+			Settings.CHAT_PREFIX + Phrases.NO_WORLD,
 			tp.world);
 		return null;
 	}

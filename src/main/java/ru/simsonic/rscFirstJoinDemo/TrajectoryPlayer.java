@@ -41,7 +41,7 @@ public class TrajectoryPlayer
 			final TrajectoryPlayState tps = prepareDemo(player, trajectory);
 			tps.currentPoint = -1;
 			if(plugin.settings.getLogStartStop())
-				BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.DEMO_STARTING.toString(),
+				BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.DEMO_STARTING,
 					new Object[] { tps.trajectory.caption, player.getName() });
 		} catch(RuntimeException ex) {
 			BukkitPluginMain.consoleLog.log(Level.WARNING, Settings.CHAT_PREFIX + "Demo starting error: {0}", ex);
@@ -113,7 +113,7 @@ public class TrajectoryPlayer
 		// Does this server support SPECTATOR mode?
 		result.supportSpectatorMode = false;
 		for(GameMode gm : GameMode.values())
-			if(gm.toString().equalsIgnoreCase("SPECTATOR"))
+			if(gm.name().equalsIgnoreCase("SPECTATOR"))
 				result.supportSpectatorMode = true;
 		// Integrate with other plugins
 		result.foundPlaceholderAPI = plugin.intergts.isPlaceholderAPI();
