@@ -8,10 +8,13 @@ soft-depend:
 - PlaceholderAPI
 - NoCheatPlus
 - HolographicDisplays
+
 commands:
   rscfjd:
+    alias: fjd
     description: ${project.artifactId} command hub
     usage: /<command> do what?
+
 permissions:
   rscfjd.admin:
     description: Access to all functions

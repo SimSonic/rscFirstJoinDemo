@@ -62,7 +62,7 @@ public class BukkitListener implements Listener
 							// Let's start it
 							final Trajectory demo = plugin.trajMngr.getFirstJoinTrajectory();
 							if(demo != null)
-								plugin.trajPlay.beginDemo(player, demo);
+								plugin.demoMngr.beginDemo(player, demo);
 						}
 					}
 				}
@@ -76,7 +76,7 @@ public class BukkitListener implements Listener
 	public void onPlayerQuit(PlayerQuitEvent event)
 	{
 		final Player player = event.getPlayer();
-		plugin.trajPlay.finishDemo(player);
+		plugin.demoMngr.finishDemo(player);
 		if(plugin.playerBuffers.containsKey(player))
 		{
 			final Trajectory buffer = plugin.getBufferedTrajectory(player);
@@ -88,7 +88,7 @@ public class BukkitListener implements Listener
 	public void onPlayerKick(PlayerKickEvent event)
 	{
 		final Player player = event.getPlayer();
-		plugin.trajPlay.finishDemo(event.getPlayer());
+		plugin.demoMngr.finishDemo(event.getPlayer());
 		if(plugin.playerBuffers.containsKey(player))
 		{
 			final Trajectory buffer = plugin.getBufferedTrajectory(player);
@@ -165,7 +165,7 @@ public class BukkitListener implements Listener
 			: permSign;
 		// Start if allowed
 		if(permSign || permTrajectory)
-			plugin.trajPlay.beginDemo(player, trajectory);
+			plugin.demoMngr.beginDemo(player, trajectory);
 	}
 	private final double distanceMax = 100;
 	private void renderRay(Location source, Location target)

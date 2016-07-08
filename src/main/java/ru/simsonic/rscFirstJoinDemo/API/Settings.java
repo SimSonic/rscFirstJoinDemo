@@ -6,6 +6,8 @@ public interface Settings
 {
 	public static final String UPDATER_URL = "http://simsonic.github.io/rscFirstJoinDemo/latest.json";
 	public static final String CHAT_PREFIX = "{_DG}[rscfjd] {_LS}";
+	public static final String UPDATE_CMD  = "/rscfjd update do";
+	
 	public static final String SIGN_LINE_0 = GenericChatCodes.processStringStatic("{_DG}[rscFJD]");
 	public static final String DEFAULT_TRAJECTORY = "firstjoin";
 	public static final String DIR_TRAJECTORIES   = "public";

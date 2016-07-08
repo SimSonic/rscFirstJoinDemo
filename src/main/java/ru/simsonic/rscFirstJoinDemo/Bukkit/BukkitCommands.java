@@ -425,7 +425,7 @@ public class BukkitCommands
 						trajectory = plugin.trajMngr.getFirstJoinTrajectory();
 					if(trajectory != null)
 					{
-						plugin.trajPlay.beginDemo(target, trajectory);
+						plugin.demoMngr.beginDemo(target, trajectory);
 						throw new CommandAnswerException("{_LG}Demo " + trajectory.caption + " has been started.");
 					}
 					throw new CommandAnswerException("{_LR}{_B}Internal error.");
@@ -439,7 +439,7 @@ public class BukkitCommands
 						: checkPlayerOnly(sender);
 					if(player == null)
 						throw new CommandAnswerException("{_LR}Cannot find such player.");
-					plugin.trajPlay.finishDemo(player);
+					plugin.demoMngr.finishDemo(player);
 					return;
 				}
 				break;
@@ -450,7 +450,7 @@ public class BukkitCommands
 					final Trajectory buffer = plugin.playerBuffers.get(player);
 					if(buffer == null || buffer.points.length == 0)
 						throw new CommandAnswerException("{_LR}Empty trajectory. Add some points first.");
-					plugin.trajPlay.resumeDemo(player, buffer);
+					plugin.demoMngr.resumeDemo(player, buffer);
 					return;
 				}
 				break;
@@ -460,7 +460,7 @@ public class BukkitCommands
 					final Player player = checkPlayerOnly(sender);
 					final TrajectoryPlayState tps = plugin.playStates.get(player);
 					final Trajectory buffer = plugin.playerBuffers.get(player);
-					plugin.trajPlay.suspendDemo(player);
+					plugin.demoMngr.suspendDemo(player);
 					if(tps != null && buffer != null && buffer.equals(tps.trajectory))
 					{
 						buffer.selected = tps.currentPoint;

@@ -103,46 +103,49 @@ public class TrajectoryPlayer
 		for(Player online : plugin.getServer().getOnlinePlayers())
 			online.hidePlayer(player);
 		// Start flight
-		final TrajectoryPlayState result = trajectory.newPlayState();
-		if(result.trajectory.points.length <= 0)
+		final TrajectoryPlayState tps = trajectory.newPlayState();
+		if(tps.trajectory.points.length <= 0)
 		{
 			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.DEMO_EMPTY,
 				player.getName());
 			throw new RuntimeException("Demo is empty.");
 		}
 		// Does this server support SPECTATOR mode?
-		result.supportSpectatorMode = false;
+		tps.supportSpectatorMode = false;
 		for(GameMode gm : GameMode.values())
 			if(gm.name().equalsIgnoreCase("SPECTATOR"))
-				result.supportSpectatorMode = true;
+				tps.supportSpectatorMode = true;
 		// Integrate with other plugins
-		result.foundPlaceholderAPI = plugin.intergts.isPlaceholderAPI();
-		result.foundProtocolLib    = plugin.intergts.isProtocolLib();
-		result.foundNoCheatPlus    = plugin.intergts.isNoCheatPlus();
-		if(plugin.settings.getLogStartStop() && result.foundNoCheatPlus)
+		tps.foundPlaceholderAPI = plugin.intergts.isPlaceholderAPI();
+		tps.foundProtocolLib    = plugin.intergts.isProtocolLib();
+		tps.foundNoCheatPlus    = plugin.intergts.isNoCheatPlus();
+		if(plugin.settings.getLogStartStop() && tps.foundNoCheatPlus)
 			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.NCP_EXEMPT, player.getName());
 		plugin.intergts.doExemptNCP(player);
 		// Other setup
-		result.originalFlightAllow = player.getAllowFlight();
-		result.originalFlightState = player.isFlying();
-		result.originalGameMode    = player.getGameMode();
+		tps.originalFlightAllow = player.getAllowFlight();
+		tps.originalFlightState = player.isFlying();
+		tps.originalGameMode    = player.getGameMode();
 		player.setAllowFlight(true);
 		player.setFlying(true);
 		player.setPlayerWeather(WeatherType.CLEAR);
-		if(result.supportSpectatorMode)
+		if(tps.supportSpectatorMode)
 			player.setGameMode(GameMode.SPECTATOR);
-		plugin.playStates.put(player, result);
+		plugin.playStates.put(player, tps);
 		// Schedule tick
-		result.scheduledTaskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
+		tps.scheduledTaskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
 		{
 			@Override
 			public void run()
 			{
-				result.localTick += 1;
-				processDemoStep(player, result);
+				tps.localTick += 1;
+				processDemoStep(player, tps);
 			}
 		}, 1, 1);
-		return result;
+		return tps;
+	}
+	void onTick()
+	{
 	}
 	private void processDemoStep(final Player player, final TrajectoryPlayState tps)
 	{
@@ -189,8 +192,8 @@ public class TrajectoryPlayer
 		final TrajectoryPoint tp2 = (nextPossiblePoint < tps.trajectory.points.length)
 			? tps.trajectory.points[nextPossiblePoint]
 			: null;
-		tps.currentSegmentFlightTime = calculateFlightTime(tp1, tp2);
-		tps.currentSegmentDeltaYaw = calculateYawDelta(tp1, tp2);
+		tps.currentSegmentFlightTime = TrajectoryFlightMath.calculateFlightTime(tp1, tp2);
+		tps.currentSegmentDeltaYaw = TrajectoryFlightMath.calculateYawDelta(tp1, tp2);
 		// Log into console about this event
 		if(plugin.settings.getLogPointReached())
 			BukkitPluginMain.consoleLog.log(Level.INFO, Settings.CHAT_PREFIX + Phrases.POINT_REACHED, new Object[]
@@ -282,33 +285,5 @@ public class TrajectoryPlayer
 			if(tps.supportSpectatorMode)
 				player.setGameMode(GameMode.SPECTATOR);
 		}
-	}
-	private long calculateFlightTime(TrajectoryPoint tp1, TrajectoryPoint tp2)
-	{
-		long result = tp1.freezeTicks;
-		if(tp1.speedAfter > 0.005f && tp2 != null)
-		{
-			final Location l1 = tp1.location;
-			final Location l2 = tp2.location;
-			if(l1 != null && l2 != null)
-			{
-				final World w1 = l1.getWorld();
-				final World w2 = l2.getWorld();
-				if(w1 != null && w2 != null && w1.equals(w2))
-					result += Math.floor(l1.distance(l2) * 20.0 / tp1.speedAfter) + 2;
-			}
-		}
-		return result;
-	}
-	private float calculateYawDelta(TrajectoryPoint tp1, TrajectoryPoint tp2)
-	{
-		if(tp2 == null)
-			return 0.0f;
-		float result = tp2.location.getYaw() - tp1.location.getYaw();
-		if(result > 180.0f)
-			result -= 360.0f;
-		if(result < -180.0f)
-			result += 360.0f;
-		return result;
 	}
 }
