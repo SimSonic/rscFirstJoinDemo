@@ -1,9 +1,11 @@
 name:    ${project.artifactId}
 main:    ${project.groupId}.${project.artifactId}.BukkitPluginMain
 version: ${project.version}
-author:  SimSonic
 website: ${project.url}
-soft-depend:
+author:  SimSonic
+load:    POSTWORLD
+
+softdepend:
 - ProtocolLib
 - PlaceholderAPI
 - NoCheatPlus
@@ -11,7 +13,7 @@ soft-depend:
 
 commands:
   rscfjd:
-    alias: fjd
+    aliases: [fjd]
     description: ${project.artifactId} command hub
     usage: /<command> do what?
 
