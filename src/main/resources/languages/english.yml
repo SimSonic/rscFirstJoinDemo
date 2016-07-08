@@ -4,7 +4,7 @@ generic:
   reloaded:    "rscFirstJoinDemo has been reloaded."
   metrics:     "Metrics (mcstats.org) enabled."
   plib-y:      "ProtocolLib was found and integrated."
-  plib-n:      "ProtocolLib wasn\'t found."
+  plib-n:      "ProtocolLib wasn't found."
   nocheatplus: "Integrated with NoCheatPlus."
 logging:
   traj-loaded: "Trajectory {0} loaded and contains {1} points."
